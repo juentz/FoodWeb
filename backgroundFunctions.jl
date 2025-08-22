@@ -28,10 +28,10 @@ function structural_parameters(N::Int64, A::Matrix{Float64}, BM::Vector{Float64}
     # is expected to increase in warmer water
     α = (BM .^ -0.25)
 
-
     #growth from production; one if species is primary producer
     ρ̃ = producer #1 .- ρ
-    #total growth from predation 
+
+    # growth from predation 
     # Julie: should be fraction not total. describes what fraction of the growth rate
     # (for every species) is gained from predation; entry of ro is zero, if species is primary producer
     # here: only 0 or 1
@@ -56,7 +56,7 @@ end
 # structural_parameters(com::Community) = structural_parameters(com.N, com.A, [x.M[1] for x = com.sp], [x.producer[1] for x = com.sp])
 
 # N = amount of species
-# M = amount of runs
+# M = amount of trials
 function random_parameters(N::Int64, M::Int64)
     #exponent
     γ = rand(Uniform(0.5, 1.5), N, M) #[0.8, 1.5]  nonlinearity of the predation rate on n with respect to prey density; prey abundant then gamma = 0 why not up to 2?
@@ -280,3 +280,37 @@ function plot_correlations(corr_γ, corr_μ, corr_ϕ, corr_ψ)
 
     plot(p1, p2, p3, p4; layout=(4,1), size=(600,800))
 end
+
+function  calculateSensandInf(N::Int64, J::Matrix{Float64}, EVals::Vector{ComplexF64}, EVecs::Matrix{ComplexF64},p1::Vector{Int64})
+    ET = eigen(transpose(J))   # transpose, to find left EVal and EVec
+    EValsT, EVecsT = ET.values, ET.vectors
+    # Sort both spectra consistently (by real part, then imaginary part)
+    # p2 = sortperm(EValsT, by = x -> (real(x), imag(x)))
+    EValsT, EVecsT = EValsT[p1], EVecsT[:, p1]
+    
+    # Sanity check: eigenvalues(J) ≈ eigenvalues(Jᵀ)
+    if any(abs.(EVals .- EValsT) .> 1e-8)
+        println("WARNING: J and transpose(J) differ beyond tolerance = 1e-8.\n ",
+                "This can be roundoff or ordering.")
+        # for (a, b) in zip(EVals, EValsT)
+        #     println(a, "   |   ", b)
+        # end
+    end
+
+    # EVNorms = sqrt.([abs(sum(EVecsT[:, n] .* EVecs[:, n])) for n in 1:N])
+    EVNorms = sqrt.(abs.(sum(EVecsT .* EVecs, dims=1)))[:]
+    # print("EVNorms: $(size(EVNorms)) should be $N")
+    Sens = zeros(N)
+    Infl = zeros(N)
+    for n = 1:N
+        Sens[n] = log(sum(abs(EVecs[n,k]) * abs(real(1/EVals[k]))  for k = 1:N))
+        Infl[n] = log(sum(abs(EVecsT[n,k]) * abs(real(1/EVals[k]))  for k = 1:N))
+
+        # Aufderheide
+        # Sens[n, i] = log.(sum(abs(EVecs[n,k]) * abs(real(1/EVals[k])) / EVNorms[k]  for k = 1:N)) # Aufderheide
+        # Infl[n, i] = log.(sum(abs(EVecsT[n,k]) * abs(real(1/EVals[k])) /EVNorms[k] for k = 1:N))
+    end
+
+    return Sens, Infl
+end
+

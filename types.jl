@@ -1,44 +1,62 @@
+"
+Type to store most important parameters for a taxa
+the NaN parameters can (but do not have to) be defined, only if surely known
+"
+Base.@kwdef struct taxa
+    name::String
+    id::Int
+    producer::Float64          # can be 0.0, 0.5, or 1.0
+    bodymass::Float64 = NaN
+    alpha::Float64 = NaN         #turnover rate
+    γ::Float64 = NaN
+    λ::Float64 = NaN
+    μ::Float64 = NaN
+    ϕ::Float64 = NaN
+    ψ::Float64 = NaN
+end
+
+
 abstract type AbstractSpecies end
 
 
-"""
-    Species
+# """
+#     Species
 
-Type to store niche model parameters for a single species, its thermal optima and a unique ID.  
-"""
+# Type to store niche model parameters for a single species, its thermal optima and a unique ID.  
+# """
 struct Species <: AbstractSpecies
-    n::Float64
-    r::Float64
-    c::Float64
-    Tpk::Float64
-    id::UUID
-    producer::Vector{Bool}
-    M::Vector{Float64}
+#     n::Float64
+#     r::Float64
+#     c::Float64
+#     Tpk::Float64
+#     id::UUID
+#     producer::Vector{Bool}
+#     M::Vector{Float64}
 end
 
-"""
-    SpeciesParameters
+# """
+#     SpeciesParameters
 
-used internaly to move species around ParameterisedCommunites
-"""
-struct SpeciesParameters
-    γ::Float64
-    λ::Float64
-    μ::Float64
-    ϕ::Float64
-    ψ::Float64
-end
+# used internaly to move species around ParameterisedCommunites
+# """
+# struct SpeciesParameters
+#     γ::Float64
+#     λ::Float64
+#     μ::Float64
+#     ϕ::Float64
+#     ψ::Float64
+# end
 
-struct ParameterisedSpecies <: AbstractSpecies
-    n::Float64
-    r::Float64
-    c::Float64
-    Tpk::Float64
-    id::UUID
-    producer::Vector{Bool}
-    M::Vector{Float64}
-    p::SpeciesParameters
-end
+# struct ParameterisedSpecies <: AbstractSpecies
+#     n::Float64
+#     r::Float64
+#     c::Float64
+#     Tpk::Float64
+#     id::UUID
+#     producer::Vector{Bool}
+#     M::Vector{Float64}
+#     p::SpeciesParameters
+# end
 
 struct StructuralParameters
     N::Int64
