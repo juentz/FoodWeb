@@ -187,31 +187,31 @@ function prop_stable_webs(s::StructuralParameters, N_trials::Int)
     return e, reEV, psw
 end
 
-"""
-    proportion_stable_webs(com::Community, fexp::Function, N_trials::Int = 100)
+# """
+#     proportion_stable_webs(com::Community, fexp::Function, N_trials::Int = 100)
 
-Calculates the proportion stable parameter configurations for a Community.   
-"""
-function proportion_stable_webs(com::Community, fexp::Function; N_trials::Int = 100)
-    J = zeros(com.N, com.N)
-    return proportion_stable_webs!(J,com, fexp; N_trials = N_trials)
-end
+# Calculates the proportion stable parameter configurations for a Community.   
+# """
+# function proportion_stable_webs(com::Community, fexp::Function; N_trials::Int = 100)
+#     J = zeros(com.N, com.N)
+#     return proportion_stable_webs!(J,com, fexp; N_trials = N_trials)
+# end
  
-"""
-    proportion_stable_webs(mc::MetaCommunity; N_trials::Int = 100)
+# """
+#     proportion_stable_webs(mc::MetaCommunity; N_trials::Int = 100)
 
-Calculates proprtion stable webs across a metacommuntiy, returning an array of proportions. 
-"""
-function proportion_stable_webs(mc::MetaCommunity, fexp::Function; N_trials::Int = 100)
-    props = zeros(size(mc.coms))
-    for (i,c) = enumerate(mc.coms)
-        if length(c.sp) > 0
-            J = zeros(size(c.A))
-            props[i] = proportion_stable_webs!(J,c, fexp, N_trials = N_trials)
-        end
-    end
-    return props 
-end
+# Calculates proprtion stable webs across a metacommuntiy, returning an array of proportions. 
+# """
+# function proportion_stable_webs(mc::MetaCommunity, fexp::Function; N_trials::Int = 100)
+#     props = zeros(size(mc.coms))
+#     for (i,c) = enumerate(mc.coms)
+#         if length(c.sp) > 0
+#             J = zeros(size(c.A))
+#             props[i] = proportion_stable_webs!(J,c, fexp, N_trials = N_trials)
+#         end
+#     end
+#     return props 
+# end
 
 
 function stable_parameterisation(com::Community, fexp::Function, N_trials = 100)
@@ -247,7 +247,8 @@ function metacommuntiy_stability(mc)
 end
 
 
-"Correlation between single parameters and stability"
+"Correlation between single parameters and stability
+ returns vector with correlations of that parameter per taxa"
 function correlation(e::Vector{ExponentialParameters}, s::Vector{Float64}, N::Int64)
     corr_γ = zeros(N)
     corr_μ = zeros(N)
@@ -269,18 +270,22 @@ function correlation(e::Vector{ExponentialParameters}, s::Vector{Float64}, N::In
     return corr_γ, corr_μ, corr_ϕ, corr_ψ
 end
 
+
+""
 function plot_correlations(corr_γ, corr_μ, corr_ϕ, corr_ψ)
     N = length(corr_γ)
     taxa = 1:N
     
-    p1 = bar(taxa, corr_γ, title="γ", xlabel="taxa", ylabel="correlation")
-    p2 = bar(taxa, corr_μ, title="μ", xlabel="taxa", ylabel="correlation")
-    p3 = bar(taxa, corr_ϕ, title="ϕ", xlabel="taxa", ylabel="correlation")
-    p4 = bar(taxa, corr_ψ, title="ψ", xlabel="taxa", ylabel="correlation")
+    p1 = bar(taxa, corr_γ, title="γ", xlabel="taxa", ylabel="correlation", label = false)
+    p2 = bar(taxa, corr_μ, title="μ", xlabel="taxa", ylabel="correlation", label = false)
+    p3 = bar(taxa, corr_ϕ, title="ϕ", xlabel="taxa", ylabel="correlation", label = false)
+    p4 = bar(taxa, corr_ψ, title="ψ", xlabel="taxa", ylabel="correlation", label = false)
 
     plot(p1, p2, p3, p4; layout=(4,1), size=(600,800))
 end
 
+
+"Calculates Sensitivity and Influence of each taxa"
 function  calculateSensandInf(N::Int64, J::Matrix{Float64}, EVals::Vector{ComplexF64}, EVecs::Matrix{ComplexF64},p1::Vector{Int64})
     ET = eigen(transpose(J))   # transpose, to find left EVal and EVec
     EValsT, EVecsT = ET.values, ET.vectors
@@ -290,15 +295,11 @@ function  calculateSensandInf(N::Int64, J::Matrix{Float64}, EVals::Vector{Comple
     
     # Sanity check: eigenvalues(J) ≈ eigenvalues(Jᵀ)
     if any(abs.(EVals .- EValsT) .> 1e-8)
-        println("WARNING: J and transpose(J) differ beyond tolerance = 1e-8.\n ",
-                "This can be roundoff or ordering.")
-        # for (a, b) in zip(EVals, EValsT)
-        #     println(a, "   |   ", b)
-        # end
+        @warn "J and transpose(J) differ beyond tolerance = 1e-8. This can be roundoff or ordering."
     end
 
     # EVNorms = sqrt.([abs(sum(EVecsT[:, n] .* EVecs[:, n])) for n in 1:N])
-    EVNorms = sqrt.(abs.(sum(EVecsT .* EVecs, dims=1)))[:]
+    # EVNorms = sqrt.(abs.(sum(EVecsT .* EVecs, dims=1)))[:]
     # print("EVNorms: $(size(EVNorms)) should be $N")
     Sens = zeros(N)
     Infl = zeros(N)
@@ -314,3 +315,16 @@ function  calculateSensandInf(N::Int64, J::Matrix{Float64}, EVals::Vector{Comple
     return Sens, Infl
 end
 
+"""
+Takes list of WoRMS/Ids that identify the taxa in the wanted community, overall foddweb A, overall taxa_list
+Returns the community
+"""
+function makecommunity(comm_ids::Vector{Int64}, A::Matrix{Float64}, taxa_list::Vector{Taxa})
+    all_ids = getfield.(taxa_list, :WoRMS) 
+    # Check if all comm_ids are contained in all_ids
+    @assert all(in(all_ids), comm_ids) == true "Given Ids are not known."
+    
+    positions = findall(x -> x in comm_ids, all_ids) #sorted from small to big
+    
+    return  Community(N=length(comm_ids), A=A[positions,positions], taxa_list = taxa_list[positions])
+end

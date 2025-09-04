@@ -2,21 +2,26 @@
 Type to store most important parameters for a taxa
 the NaN parameters can (but do not have to) be defined, only if surely known
 "
-Base.@kwdef struct taxa
+# Mutable container for parameters
+Base.@kwdef mutable struct MutableParams
+    alpha::Float64 = NaN
+    γ::Float64     = NaN
+    λ::Float64     = NaN
+    μ::Float64     = NaN
+    ϕ::Float64     = NaN
+    ψ::Float64     = NaN
+end
+
+# Immutable main Taxa struct
+Base.@kwdef struct Taxa
     name::String
-    id::Int
-    producer::Float64          # can be 0.0, 0.5, or 1.0
-    bodymass::Float64 = NaN
-    alpha::Float64 = NaN         #turnover rate
-    γ::Float64 = NaN
-    λ::Float64 = NaN
-    μ::Float64 = NaN
-    ϕ::Float64 = NaN
-    ψ::Float64 = NaN
+    WoRMS::Int64
+    producer::Float64          # 0.0, 0.5, or 1.0
+    params::MutableParams = MutableParams()  # default NaN values
 end
 
 
-abstract type AbstractSpecies end
+# abstract type AbstractSpecies end
 
 
 # """
@@ -24,7 +29,7 @@ abstract type AbstractSpecies end
 
 # Type to store niche model parameters for a single species, its thermal optima and a unique ID.  
 # """
-struct Species <: AbstractSpecies
+# struct Species <: AbstractSpecies
 #     n::Float64
 #     r::Float64
 #     c::Float64
@@ -32,7 +37,7 @@ struct Species <: AbstractSpecies
 #     id::UUID
 #     producer::Vector{Bool}
 #     M::Vector{Float64}
-end
+# end
 
 # """
 #     SpeciesParameters
@@ -88,70 +93,70 @@ struct GeneralisedParameters
     e::ExponentialParameters
 end
 
-abstract type  AbstractCommunity end
+# abstract type  AbstractCommunity end
 
 """
     Community
 
 Type containing parameters defining a community including its interaction matrix and a vector of species within.
 """
-struct Community <: AbstractCommunity
+Base.@kwdef struct Community 
     N::Int64
     A::Matrix{Float64}
-    sp::Vector{Species}
-    ids::Vector{UUID}
-    TL::Vector{Float64}
-    n::Vector{Float64}
-    T::Float64
-    loc::Tuple{Float64,Float64} #location(lon,lat)
-    R::Float64
+    taxa_list::Vector{Taxa}
+    # ids::Vector{UUID}
+    # TL::Vector{Float64}
+    # n::Vector{Float64}
+    # T::Float64
+    # loc::Tuple{Float64,Float64} #location(lon,lat)
+    # R::Float64
 end
 
-"""
-    Community
+# """
+#     Community
 
-Type containing parameters defining a community including its interaction matrix and a vector of species within.
-"""
-struct ParameterisedCommunity <: AbstractCommunity
-    N::Int64
-    A::Matrix{Float64}
-    sp::Vector{Species}
-    ids::Vector{UUID}
-    TL::Vector{Float64}
-    n::Vector{Float64}
-    T::Float64
-    loc::Tuple{Float64,Float64}
-    R::Float64
-    p::GeneralisedParameters
-end
+# Type containing parameters defining a community including its interaction matrix and a vector of species within.
+# """
+# struct ParameterisedCommunity <: AbstractCommunity
+#     N::Int64
+#     A::Matrix{Float64}
+#     sp::Vector{Species}
+#     ids::Vector{UUID}
+#     TL::Vector{Float64}
+#     n::Vector{Float64}
+#     T::Float64
+#     loc::Tuple{Float64,Float64}
+#     R::Float64
+#     p::GeneralisedParameters
+# end
 
-"""
-    Base.show(io::IO, com::AbstractCommunity)
+# """
+#     Base.show(io::IO, com::AbstractCommunity)
 
-TBW
-"""
-Base.show(io::IO, com::AbstractCommunity) = print(io, typeof(com), " N:", length(com.sp)," T:", com.T )
+# TBW
+# """
+# Base.show(io::IO, com::AbstractCommunity) = print(io, typeof(com), " N:", length(com.sp)," T:", com.T )
 
 
-"""
-    MetaCommunity
+# """
+#     MetaCommunity
 
-type containing parameters defining a metacommunity including the communties `coms` as well as the matrix `D` which defines "distance" between communties.
-"""
-struct MetaCommunity
-    coms::Array{AbstractCommunity}
-    loc::Array{Tuple{Float64, Float64}}
-    D::Array{Float64}
-    T_mat::Array{Float64}
-    sp::Vector{Species}
-    sp_id::Vector{UUID}
-    sp_loc::Dict{UUID,Vector{Int}}
-    R::Float64
-end
+# type containing parameters defining a metacommunity including the communties `coms` as well as the matrix `D` which defines "distance" between communties.
+# """
+# struct MetaCommunity
+#     coms::Array{AbstractCommunity}
+#     loc::Array{Tuple{Float64, Float64}}
+#     D::Array{Float64}
+#     T_mat::Array{Float64}
+#     sp::Vector{Species}
+#     sp_id::Vector{UUID}
+#     sp_loc::Dict{UUID,Vector{Int}}
+#     R::Float64
+# end
 
-"""
-    Base.show(io::IO, mc::MetaCommunity)
+# """
+#     Base.show(io::IO, mc::MetaCommunity)
 
-TBW
-"""
-Base.show(io::IO, mc::MetaCommunity) =  print(io, "MetaCommunity M:", length(mc.coms)," ",typeof(mc.coms[1])," Sp: ", length(mc.sp))
+# TBW
+# """
+# Base.show(io::IO, mc::MetaCommunity) =  print(io, "MetaCommunity M:", length(mc.coms)," ",typeof(mc.coms[1])," Sp: ", length(mc.sp))
