@@ -21,7 +21,7 @@ file = XLSX.readxlsx("matrices/Arctic.xlsx")
 sheet = file["PredPreyMatrixArctic1"]
 
 # Extract whole foodweb + infos from excel file
-A = Float64.(coalesce.(XLSX.getdata(sheet, "D4:BS71"), 0.0))
+A = Float64.(coalesce.(XLSX.getdata(sheet, "D4:BS71"), 0.0)) #transforms into float and missing entries -> 0
 N = size(A,1)
 all_names = XLSX.getdata(sheet, "A4:A71")
 all_ids = vec(Int64.(coalesce.(XLSX.getdata(sheet, "B4:B71"), 0))) # Takes ID, sets missing IDs to 0, converts into Int64
@@ -41,11 +41,11 @@ all_alpha = ifelse.(all_alpha .== 0, 1.0, 1.0 ./ (2 .* all_alpha)) # define test
 Extracting a sub community based on WoRMS Id of single taxa - the order of Ids can be arbitrary
 AND saving the communities in jld2 file
 """
-comm_1 = Community(N= N, A=A, taxa_list=taxa_list)
+comm_1 = Community(name = "Metacommunity", N= N, A=A, taxa_list=taxa_list)
 comm_ids = [362051, 139178, 104465, 104852, 104292, 1507271, 104632, 110709, 1337, 137129] #test vector
-comm_2 = makecommunity(comm_ids, A, taxa_list)
+comm_2 = makecommunity("test1", comm_ids, A, taxa_list)
 comm_ids = [104152, 103259, 115484]
-comm_3 = makecommunity(comm_ids, A, taxa_list)
+comm_3 = makecommunity("test2", comm_ids, A, taxa_list)
 
 communities = [comm_1, comm_2, comm_3]
 

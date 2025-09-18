@@ -100,7 +100,8 @@ end
 
 Type containing parameters defining a community including its interaction matrix and a vector of species within.
 """
-Base.@kwdef struct Community 
+Base.@kwdef struct Community
+    name::String
     N::Int64
     A::Matrix{Float64}
     taxa_list::Vector{Taxa}
