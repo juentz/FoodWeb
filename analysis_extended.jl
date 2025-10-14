@@ -24,12 +24,12 @@ y=1, n=0
     A.1 Detection of Sensibile and Influential Taxa"
     SensandInfAna = 0
     "A.2 Impact of Perturbation"
-    Perturbation = 0
+    Perturbation = 1
     K = [0.0, 0.0, -0.5] #perturbation vector. What taxa experiences what change in growthrate F_n.
 
 "B. Erase taxa and detect changes in stability and important taxa
     Includes analysis of original community"
-Extinction = 1
+Extinction = 0
 ex_taxa_id = 103259 # index of taxa
 
 "C. Include taxa and detect changes in stability and important taxa
@@ -66,7 +66,7 @@ comm = Community(name = "test", N= N, A=A, taxa_list=taxa_list)
 alpha =  ([1.0, 7.0, 40.0, 40.0])
 [t.params.alpha = a for (t,a) in zip(taxa_list, alpha)] # set the parameter alpha for each taxa
 # producer = getfield.(comm.taxa_list, :producer)
-ex_taxa_id = 1 # index of taxa
+ex_taxa_id = 4 # index of taxa
 inv_taxon_id = 3
 if Invasion == 1
     #make new community without inv_taxon_id
@@ -106,24 +106,17 @@ if Extinction == 1
     # Plot: geometric mean sens and infl per taxa -------
     # print("Sens for orig comm: $(mean(Sens, dims=2))\n")
     sensmean = vec(exp.(mean(Sens, dims=2)))
-    normalize_SensInf!(comm.N,sensmean)
     # print("sensmean $(exp.(vec(mean(Sens, dims=2)))) \n")
     inflmean = vec(exp.(mean(Infl, dims=2)))
-    normalize_SensInf!(comm.N,inflmean)
     # signed geomean to exclude extremes but keep negative impact negative.
     meanImp = [signed_geomean(row) for row in eachrow(ex_Impact)]
     # print(meanImp)
     # meanImp = geomean(ex_Impact, dims=2)[:]
 
     ex_sensmean = vec(exp.(mean(ex_Sens, dims=2)))
-    normalize_SensInf!(ex_comm.N,ex_sensmean)
     insert!(ex_sensmean, ex_ind, 0)
     ex_inflmean = vec(exp.(mean(ex_Infl, dims=2)))
-    normalize_SensInf!(ex_comm.N,ex_inflmean)
     insert!(ex_inflmean, ex_ind, 0)
-
-    print(abs.(sensmean - ex_sensmean))
-    print(abs.(inflmean - ex_inflmean))
 
     "VISUALIZATION -------------------------------------------------------------------"
     taxa_names = [comm.taxa_list[n].name for n in 1:comm.N]
@@ -141,7 +134,6 @@ if Extinction == 1
         # xmirror=true,   # mirror x-axis to the top
         # orientation = :horizontal   # make bars horizontal
     )
-    p1 = plot_norm_SensInf(taxa_names, sensmean, inflmean)
     # --- Plot 2: Impact ---
     p2 = bar(
         meanImp;
@@ -171,7 +163,6 @@ if Extinction == 1
         # xmirror=true,   # mirror x-axis to the top
         # orientation = :horizontal   # make bars horizontal
     )
-    p3 = plot_norm_SensInf(taxa_names, ex_sensmean, ex_inflmean)
 
     # --- Combine plots side by side ---
     plt = plot(p1, p2, p3, layout=(3,1), size=(700,700))
@@ -208,8 +199,7 @@ if Invasion == 1
     inv_ind = findfirst(t -> t.WoRMS == inv_taxon_id, inv_comm.taxa_list) #find index of inversion taxon in inversion community
     sensmean = vec(exp.(mean(Sens, dims=2)))
     inflmean = vec(exp.(mean(Infl, dims=2)))
-    insert!(sensmean, inv_ind, 0.0)
-    insert!(inflmean, inv_ind, 0.0)
+    
     # signed geomean to exclude extremes but keep negative impact negative.
     meanImp = [signed_geomean(row) for row in eachrow(Impact)]
     insert!(meanImp, inv_ind, 0.0)
@@ -222,19 +212,28 @@ if Invasion == 1
     taxa_names = [inv_comm.taxa_list[n].name for n in 1:inv_comm.N]
     "VISUALIZATION -------------------------------------------------------------------"
     # --- Plot 1: Sensitivity & Influence original community ---
-    p1 = groupedbar(
-        # taxa_names,
-        [sensmean inflmean],
-        label = ["sensitivity" "influence"],
-        xticks=(1:inv_comm.N, taxa_names),  # taxa names on y-axis
-        # ylabel = "taxa",
-        ylabel = "\ngeometric mean",
-        title = "before invasion: $(round(sum_stab/trials * 100,digits=1))% stable trials\n",
-        bar_width = 0.27,
-        grouped = true,
-        # xmirror=true,   # mirror x-axis to the top
-        # orientation = :horizontal   # make bars horizontal
-    )
+
+    normalize_SensInf!(comm.N, sensmean)
+    normalize_SensInf!(comm.N, inflmean)
+    insert!(sensmean, inv_ind, 0.0)
+    insert!(inflmean, inv_ind, 0.0)
+    p1 = plot_norm_SensInf(taxa_names, sensmean, inflmean)
+    plot!(p1; title="community $(comm.name)")
+
+    # p1 = groupedbar(
+    #     # taxa_names,
+    #     [sensmean inflmean],
+    #     label = ["sensitivity" "influence"],
+    #     xticks=(1:inv_comm.N, taxa_names),  # taxa names on y-axis
+    #     # ylabel = "taxa",
+    #     ylabel = "\ngeometric mean",
+    #     title = "before invasion: $(round(sum_stab/trials * 100,digits=1))% stable trials\n",
+    #     bar_width = 0.27,
+    #     grouped = true,
+    #     # xmirror=true,   # mirror x-axis to the top
+    #     # orientation = :horizontal   # make bars horizontal
+    # )
+
     # --- Plot 2: Impact ---
     p2 = bar(
         meanImp;
@@ -249,21 +248,29 @@ if Invasion == 1
         # xmirror=true   # mirror x-axis to the top
     )
     hline!([0], color=:black, lw=2, label=false)
-    # --- Plot 1: Sensitivity & Influence original community ---
+    # --- Plot 1: Sensitivity & Influence invasion community ---
     # taxa_names = [ex_comm.taxa_list[n].name for n in 1:ex_comm.N]
-    p3 = groupedbar(
-        # taxa_names,
-        [inv_sensmean inv_inflmean],
-        label = ["sensitivity" "influence"],
-        xticks=(1:inv_comm.N, taxa_names),  # taxa names on y-axis
-        # ylabel = "taxa",
-        ylabel = "\ngeometric mean",
-        title = "after invasion: $(round(inv_sum_stab/trials * 100,digits=1))% stable trials\n",
-        bar_width = 0.27,
-        grouped = true,
-        # xmirror=true,   # mirror x-axis to the top
-        # orientation = :horizontal   # make bars horizontal
-    )
+
+    normalize_SensInf!(inv_comm.N, inv_sensmean)
+    normalize_SensInf!(inv_comm.N, inv_inflmean)
+    p3 = plot_norm_SensInf(taxa_names, inv_sensmean, inv_inflmean)
+    plot!(p3; title="community $(inv_comm.name)")
+
+    # p3 = groupedbar(
+    #     # taxa_names,
+    #     [inv_sensmean inv_inflmean],
+    #     label = ["sensitivity" "influence"],
+    #     xticks=(1:inv_comm.N, taxa_names),  # taxa names on y-axis
+    #     # ylabel = "taxa",
+    #     ylabel = "normalized over-/under-average",
+    #     ylimits = [-1.0,1.0],
+    #     title = "after invasion: $(round(inv_sum_stab/trials * 100,digits=1))% stable trials\n",
+    #     bar_width = 0.27,
+    #     grouped = true,
+    #     # xmirror=true,   # mirror x-axis to the top
+    #     # orientation = :horizontal   # make bars horizontal
+    # )
+    # hline!([0], color=:black, lw=2, label=false)
 
     # --- Combine plots side by side ---
     plt = plot(p1, p2, p3, layout=(3,1), size=(700,700))
@@ -282,20 +289,7 @@ taxa_names = [comm.taxa_list[n].name for n in 1:comm.N]
 if SensandInfAna == 1
     # proportion stable webs 
     print("\n$(sum_stab/trials*100) % of the conducted $trials trials of community $(comm.name) are stable.\n")
-    # sensitive and influential taxa
-    #makes the geometric mean over all the entries where the jacobi matrix was stable.
-    #sensmean = mean(Sens[:, stability .== 1], dims=2) # geometric mean without exp
     
-
-
-    # if sum_stab > 0
-    #     print("\n The mean sensitivity per taxa out of $sum_stab trials:\n $sensmean\n")
-    #     print("\n The mean influence per taxa out of $sum_stab trials:\n $inflmean.\n")
-    # end
-
-    # print("Sensibility\n max $(maximum(Sens, dims=2))\n min $(minimum(Sens, dims=2))\n")
-    # print("Influence\n max $(maximum(Infl, dims=2))\n min $(minimum(Infl, dims=2))\n")
-
     # Plot: Sens and Inf for each trial -------
     # First plot (Sensitivity)
     p1 = plot(xlabel="trials", ylabel="sensitivity", title="Sensitivity of Taxa")
@@ -315,21 +309,12 @@ if SensandInfAna == 1
     sensmean = vec(exp.(mean(Sens, dims=2)))
     inflmean = vec(exp.(mean(Infl, dims=2)))
 
-    plt = groupedbar(
-        # taxa_names,
-        [sensmean inflmean],
-        label = ["Sensitivity" "Influence"],
-        xticks=(1:length(taxa_names), taxa_names),  # taxa names on y-axis
-        # ylabel = "Taxa",
-        ylabel = "geometric mean",
-        title = "Sensitivity and Influence per Taxon",
-        bar_width = 0.27,
-        grouped = true,
-        # xmirror=true,   # mirror x-axis to the top
-        # orientation = :horizontal   # make bars horizontal
-    )
-    # Add thick black line at x=0
-    # hline!([0], color=:black, lw=2,  label=false)
+    normalize_SensInf!(N, sensmean)
+    normalize_SensInf!(N, inflmean)
+
+    #plot 
+    plt = plot_norm_SensInf(taxa_names, sensmean, inflmean)
+    plot!(plt; title="community $(comm.name)")
     savefig(plt, "Sens_Infl_mean.png")
     # print("$(sensmean[2]) and $(inflmean[2])")
 end
@@ -351,9 +336,17 @@ if Perturbation == 1
     end
     savefig("Impact_plot.png")
 
-    # TODO taking log mean seams reasonable to flatten extremes
+    #showing the reality similar to above showing all impacts per taxon
+    boxplot(reshape(taxa_names, 1, :), 
+        transpose(Impact), 
+        legend=false)
+    hline!([0], color=:black, lw=1,label=false)
+    savefig("Impact_box.png")
+
+
+    # signed geomean to exclude extremes but keep negative impact negative.
+    meanImp = [signed_geomean(row) for row in eachrow(Impact)]
     # Plot: Mean impact per taxa
-    meanImp = mean(Impact, dims=2)[:]
     bar(
         meanImp;
         # orientation=:horizontal, # horizontal bars
