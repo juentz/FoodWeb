@@ -83,6 +83,11 @@ struct ExponentialParameters
     ψ::Vector{Float64}
 end
 
+struct stableJacPara
+    J::Matrix{Float64}
+    e::ExponentialParameters
+end
+
 """
     GeneralisedParameters
 

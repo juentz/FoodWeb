@@ -1,0 +1,104 @@
+% Recommended preamble:
+% \usetikzlibrary{arrows.meta}
+% \usetikzlibrary{backgrounds}
+% \usepgfplotslibrary{patchplots}
+% \usepgfplotslibrary{fillbetween}
+% \pgfplotsset{%
+%     layers/standard/.define layer set={%
+%         background,axis background,axis grid,axis ticks,axis lines,axis tick labels,pre main,main,axis descriptions,axis foreground%
+%     }{
+%         grid style={/pgfplots/on layer=axis grid},%
+%         tick style={/pgfplots/on layer=axis ticks},%
+%         axis line style={/pgfplots/on layer=axis lines},%
+%         label style={/pgfplots/on layer=axis descriptions},%
+%         legend style={/pgfplots/on layer=axis descriptions},%
+%         title style={/pgfplots/on layer=axis descriptions},%
+%         colorbar style={/pgfplots/on layer=axis descriptions},%
+%         ticklabel style={/pgfplots/on layer=axis tick labels},%
+%         axis background@ style={/pgfplots/on layer=axis background},%
+%         3d box foreground style={/pgfplots/on layer=axis foreground},%
+%     },
+% }
+
+\begin{tikzpicture}[/tikz/background rectangle/.style={fill={rgb,1:red,1.0;green,1.0;blue,1.0}, fill opacity={1.0}, draw opacity={1.0}}, show background rectangle]
+\begin{axis}[point meta max={nan}, point meta min={nan}, legend cell align={left}, legend columns={1}, title={}, title style={at={{(0.5,1)}}, anchor={south}, font={{\fontsize{14 pt}{18.2 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}, align={center}}, legend style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, line width={1}, solid, fill={rgb,1:red,1.0;green,1.0;blue,1.0}, fill opacity={1.0}, text opacity={1.0}, font={{\fontsize{8 pt}{10.4 pt}\selectfont}}, text={rgb,1:red,0.0;green,0.0;blue,0.0}, cells={anchor={center}}, at={(1.02, 1)}, anchor={north west}}, axis background/.style={fill={rgb,1:red,1.0;green,1.0;blue,1.0}, opacity={1.0}}, anchor={north west}, xshift={1.0mm}, yshift={-1.0mm}, width={150.4mm}, height={99.6mm}, scaled x ticks={false}, xlabel={}, x tick style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, opacity={1.0}}, x tick label style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, opacity={1.0}, rotate={45}}, xlabel style={at={(ticklabel cs:0.5)}, anchor=near ticklabel, at={{(ticklabel cs:0.5)}}, anchor={near ticklabel}, font={{\fontsize{11 pt}{14.3 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}}, xmajorgrids={true}, xmin={-0.41000000000000014}, xmax={49.41}, xticklabels={{Phytoplankton (Baccilariophyceae / Phaeocystis / Dinoflagellaten),Microzooplankton (Cilliaten / heterotrophe Flagellaten) ,Nauplien (here: Calanoida),Appendicularien (here: Appendicularia),Heterorhabdus norvegicus,CI-CIII indet. (here: Calanoida),Hydrozoa,Medusen (here: Hydrozoa),Amphipoda,Temorites brevis,Tisbe sp.,Limacina spp. ,Pseudocalanus minutus,Microcalanus pygmaeus,Oithonidae,Harpacticoidae (here: Harpacticoida),Themisto abyssorum,Thysanoessa longicaudata,Clione limacina,Chaetognatha,Calanus finmarchicus,Lucicutia polaris,Calanus glacialis,Metridia longa,Mormonilla sp.,Themisto libellula,Euchaeta spp.,Lubbockia glacialis (now: Atrophia glacialis),Polychaeta,Heterorhabdus compactus (now: Paraheterorhabdus compactus),Calanus hyperboreus,Spinocalanidae, AetideidaeI,AetideidaeII,Euchaeta glacialis (now: Paraeuchaeta glacialis),Scolecitrichidae, Tharybidae,Augaptilidae,Hymenodora glacialis,Ostracoda,Euchaeta barbata (now: Paraeuchaeta barbata barbata),Isopoda,Boreogadus saida,Cepphus grylle,Ursus maritimus,Alle alle,Uria lomvia,Ophiuridae,Pusa hispida,Balaena mysticetus}}, xtick={{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48}}, xtick align={inside}, xticklabel style={font={{\fontsize{8 pt}{10.4 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}, anchor={north east}}, x grid style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={0.1}, line width={0.5}, solid}, axis x line*={left}, x axis line style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, line width={1}, solid}, scaled y ticks={false}, ylabel={absolute impact}, y tick style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, opacity={1.0}}, y tick label style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, opacity={1.0}, rotate={0}}, ylabel style={at={(ticklabel cs:0.5)}, anchor=near ticklabel, at={{(ticklabel cs:0.5)}}, anchor={near ticklabel}, font={{\fontsize{11 pt}{14.3 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}}, ymajorgrids={true}, ymin={-32.66930891690595}, ymax={1121.7196364036006}, yticklabels={{0.0,min,expected,250.0,500.0,750.0,1000.0,max}}, ytick={{0.0,0.0020763280139410203,189.40887179136126,250.0,500.0,750.0,1000.0,1089.0482511586806}}, ytick align={inside}, yticklabel style={font={{\fontsize{8 pt}{10.4 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}}, y grid style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={0.1}, line width={0.5}, solid}, axis y line*={left}, y axis line style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, line width={1}, solid}, colorbar={false}]
+    \addplot[color={rgb,1:red,0.502;green,0.502;blue,0.502}, name path={5}, only marks, draw opacity={1.0}, line width={0}, solid, mark={*}, mark size={6.0 pt}, mark repeat={1}, mark options={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, fill={rgb,1:red,0.502;green,0.502;blue,0.502}, fill opacity={1.0}, line width={0.75}, rotate={0}, solid}]
+        table[row sep={\\}]
+        {
+            \\
+            1.0  0.08057386652246305  \\
+            2.0  0.1101523562834607  \\
+            3.0  1.8247247614456987  \\
+            4.0  2.7141764031922384  \\
+            5.0  8.347150246756259  \\
+            6.0  5.399602755411924  \\
+            7.0  1.4308725710622814  \\
+            8.0  20.35241882062805  \\
+            9.0  2.071637337935914  \\
+            10.0  27.28989332753851  \\
+            11.0  21.827267364406868  \\
+            12.0  6.810334535906169  \\
+            13.0  53.48675628327289  \\
+            14.0  12.907147993273552  \\
+            15.0  64.6101417426422  \\
+            16.0  37.690772534952714  \\
+            17.0  17.286231970843122  \\
+            18.0  15.820466827240878  \\
+            19.0  2.450549166173816  \\
+            20.0  56.1101896469589  \\
+            21.0  69.59181431888379  \\
+            22.0  107.26073154588832  \\
+            23.0  84.38987899299914  \\
+            24.0  36.020122289728455  \\
+            25.0  98.5939516764352  \\
+            26.0  28.89670518817387  \\
+            27.0  207.34675540871083  \\
+            28.0  101.49720239118967  \\
+            29.0  112.08661942831955  \\
+            30.0  170.1902347616006  \\
+            31.0  191.71392092300226  \\
+            32.0  31.46301215593468  \\
+            33.0  240.94616991946117  \\
+            34.0  171.41741496711057  \\
+            35.0  185.60722215827167  \\
+            36.0  312.61055612483295  \\
+            37.0  13.616376102319546  \\
+            38.0  4.106504050975041  \\
+            39.0  154.31549288558224  \\
+            40.0  9.299053533121803  \\
+            41.0  116.83352384349269  \\
+            42.0  30.433669103037296  \\
+            43.0  26.9937167015793  \\
+            44.0  60.815529649699805  \\
+            45.0  110.43230045789464  \\
+            46.0  38.789602448677655  \\
+            47.0  65.77479172120343  \\
+            48.0  307.66322302391336  \\
+        }
+        ;
+    \addplot[color={rgb,1:red,0.0;green,0.0;blue,0.0}, name path={6}, draw opacity={1.0}, line width={4}, dashed]
+        table[row sep={\\}]
+        {
+            \\
+            -50.22999999999999  0.0020763280139410203  \\
+            99.22999999999999  0.0020763280139410203  \\
+        }
+        ;
+    \addplot[color={rgb,1:red,0.0;green,0.0;blue,0.0}, name path={7}, draw opacity={1.0}, line width={2}, solid]
+        table[row sep={\\}]
+        {
+            \\
+            -50.22999999999999  189.40887179136126  \\
+            99.22999999999999  189.40887179136126  \\
+        }
+        ;
+    \addplot[color={rgb,1:red,0.0;green,0.0;blue,0.0}, name path={8}, draw opacity={1.0}, line width={4}, dashed]
+        table[row sep={\\}]
+        {
+            \\
+            -50.22999999999999  1089.0482511586806  \\
+            99.22999999999999  1089.0482511586806  \\
+        }
+        ;
+\end{axis}
+\end{tikzpicture}

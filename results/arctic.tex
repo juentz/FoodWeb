@@ -1,0 +1,169 @@
+\documentclass{article}
+%
+%\usepackage{amsmath,amsfonts,amssymb,amsthm, mathabx}
+%
+%\usepackage{tikz}
+%\usepackage{graphicx}
+
+
+% Recommended preamble
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{backgrounds}
+\usepackage{pgfplots}
+\usepgfplotslibrary{patchplots}
+\usepgfplotslibrary{fillbetween}
+
+\pgfplotsset{%
+	layers/standard/.define layer set={%
+		background,axis background,axis grid,axis ticks,axis lines,axis tick labels,pre main,main,axis descriptions,axis foreground%
+	}{
+		grid style={/pgfplots/on layer=axis grid},
+		tick style={/pgfplots/on layer=axis ticks},
+		axis line style={/pgfplots/on layer=axis lines},
+		label style={/pgfplots/on layer=axis descriptions},
+		legend style={/pgfplots/on layer=axis descriptions},
+		title style={/pgfplots/on layer=axis descriptions},
+		colorbar style={/pgfplots/on layer=axis descriptions},
+		ticklabel style={/pgfplots/on layer=axis tick labels},
+		axis background@ style={/pgfplots/on layer=axis background},
+		3d box foreground style={/pgfplots/on layer=axis foreground},
+	},
+}
+% \usetikzlibrary{arrows.meta}
+% \usetikzlibrary{backgrounds}
+% \usepgfplotslibrary{patchplots}
+% \usepgfplotslibrary{fillbetween}
+% \pgfplotsset{%
+	%     layers/standard/.define layer set={%
+		%         background,axis background,axis grid,axis ticks,axis lines,axis tick labels,pre main,main,axis descriptions,axis foreground%
+		%     }{
+		%         grid style={/pgfplots/on layer=axis grid},%
+		%         tick style={/pgfplots/on layer=axis ticks},%
+		%         axis line style={/pgfplots/on layer=axis lines},%
+		%         label style={/pgfplots/on layer=axis descriptions},%
+		%         legend style={/pgfplots/on layer=axis descriptions},%
+		%         title style={/pgfplots/on layer=axis descriptions},%
+		%         colorbar style={/pgfplots/on layer=axis descriptions},%
+		%         ticklabel style={/pgfplots/on layer=axis tick labels},%
+		%         axis background@ style={/pgfplots/on layer=axis background},%
+		%         3d box foreground style={/pgfplots/on layer=axis foreground},%
+		%     },
+	% }
+
+
+
+%\usetikzlibrary{arrows.meta}
+% \usetikzlibrary{backgrounds}
+% \usepgfplotslibrary{patchplots}
+% \usepgfplotslibrary{fillbetween}
+% \pgfplotsset{%
+%	     layers/standard/.define layer set={%
+%		         background,axis background,axis grid,axis ticks,axis lines,axis tick labels,pre main,main,axis descriptions,axis foreground%
+%		     }{
+%		         grid style={/pgfplots/on layer=axis grid},%
+%		         tick style={/pgfplots/on layer=axis ticks},%
+%		         axis line style={/pgfplots/on layer=axis lines},%
+%		         label style={/pgfplots/on layer=axis descriptions},%
+%		         legend style={/pgfplots/on layer=axis descriptions},%
+%		         title style={/pgfplots/on layer=axis descriptions},%
+%		         colorbar style={/pgfplots/on layer=axis descriptions},%
+%		         ticklabel style={/pgfplots/on layer=axis tick labels},%
+%		         axis background@ style={/pgfplots/on layer=axis background},%
+%		         3d box foreground style={/pgfplots/on layer=axis foreground},%
+%		     },
+%	 }
+
+\begin{document}
+\begin{center}
+	{\Large  \bf Arctic  \today}
+\end{center}
+
+
+%\begin{figure}[htbp]
+%	\resizebox{\textwidth}{!}{
+%		\includegraphics{resistance_arctic.png}\includegraphics{reactivity_arctic.png}\includegraphics{returntime_arctic.png}
+%	}
+%	\caption{
+%		Minimal (bottom), maximal (top) end expected (circle) value of different measures. Named red dots on the right to each vertical line position single species within this range.\\
+%		Resistance Measure (left): Minimal effort one has to make to drag the system away from the equilibrium (depending on the dragging direction the value changes).\\
+%		Reactivity Measure (middle): Initial amplification rate of $X(t)$, when starting point deviates the equilibrium by one.\\
+%		Return Time Measure (right):  Return time to the equilibrium of a trajectory $X(t)$, when starting point deviates the equilibrium by one.
+%	}
+%\end{figure}
+%{\bf Interpretation:}\\
+%Resistance measure: Phytoplankton and Microzooplankton are most resistant in the arctic. All other species' abundances are rather easily manipulated.\\
+%Reactivity measure: Again Phytoplankton and Microzooplankton stand out in playing an important role in pulling the system to non-reactivity. With a closer look at the numbers, we can detect 'reactive species'.\\
+%Return Time Measure: Can rank species reagarding the systems return time when only that species is pulse perturbed.
+%
+%\begin{figure}
+%	\resizebox{\textwidth}{!}{
+%		\includegraphics[angle=90]{sensinfl_arctic.png}
+%	}
+%	\caption{
+%		Normalized deviation of the mean (line at 0.0) sensitivity and influence for each species (species group) in the arctic.
+%	}
+%\end{figure}
+
+\begin{figure}[htbp]
+	\resizebox{\textwidth}{!}{
+		\input{resistancebar2.tex}
+	}
+	\caption{
+		Minimal (dashed line bottom), maximal (dashed line top) end expected (solid line) value of resistance measure.
+		Dots describe how resistant single species are within this range.
+	}
+\end{figure}
+\begin{figure}
+	\resizebox{\textwidth}{!}{
+		\input{sensitivitybar2.tex}
+	}
+	\caption{
+		Sensitivity of each species.
+	}
+\end{figure}
+
+Interpretation: The abundance of most species is more easily manipulated than a random combination. This measure is based on the controllability Gramian.\pagebreak
+
+
+\begin{figure}
+	\resizebox{\textwidth}{!}{
+		\input{returntimebar2.tex}
+	}
+	\caption{
+		Minimal (dashed line bottom), maximal (dashed line top) end expected (solid line) value of return time measure.
+		Dots describe the return time of the system within this range if only a single species is perturbed. 
+	}
+\end{figure}
+
+Interpretation: Measure is based on the observability Gramian. It seems like the return time scales with turnover rate. When Phyto- or Mezoplankton is perturbed, the system returns fastest to the equilibrium. A pulse perturbation of Baleana mysticetus (lives above 100 years) yields a long return time.
+
+\begin{figure}
+	\resizebox{\textwidth}{!}{
+		\input{reactivitybar2.tex}
+	}
+	\caption{
+		Need to work on this. There is obviously a bug in the code, as the dots should not lie outside the dashed bounds.
+	}
+\end{figure}
+
+\begin{figure}
+	\resizebox{\textwidth}{!}{
+		\input{impactbar2.tex}
+	}
+	\caption{
+		Need to work on this. There is obviously a bug in the code, as the dots should not lie outside the dashed bounds.
+	}
+\end{figure}
+
+
+\begin{figure}
+	\resizebox{\textwidth}{!}{
+		\input{influencebar2.tex}
+	}
+	\caption{
+		Influence of each species.
+	}
+\end{figure}
+
+\end{document}

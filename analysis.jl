@@ -5,13 +5,128 @@ using StatsBase
 using Statistics, StatsPlots
 using JLD2 # for storing and loading data
 using Plots
+pgfplotsx()
+# using PGFPlotsX
+using Statistics
 
 include("types.jl")
 include("backgroundFunctions.jl") 
+include("templateplots.jl")
 # Load communities from 'communities.jld2' file
 @load "communities.jld2" communities
 metacomm = communities[1]
 
+function find_redundant(comm::Community, A::Matrix{Float64}, alpha::Vector)
+    N = size(A, 1)
+    # Make a dictionary mapping signatures → indices
+    groups = Dict{String, Vector{Int}}()
+
+    for i in 1:N
+        rowkey = join(A[i, :], "")
+        colkey = join(A[:, i], "")
+        key = string(alpha[i], "_", rowkey, "_", colkey)
+        push!(get!(groups, key, Int[]), i)
+    end
+
+    # Print redundancies
+    for (key, inds) in groups
+        if length(inds) > 1
+            # names = getfield.(comm.taxa_list[inds], :name)
+            println("Redundant indices: ", inds) #names)
+        end
+    end
+end
+function sort_matrix_by_alpha(A::Matrix{Float64}, alpha::Vector)
+    @assert size(A, 1) == size(A, 2) == length(alpha) "Matrix must be square and match alpha length"
+
+    # Sort indices by alpha descending
+    sorted_inds = sortperm(alpha; rev=true)
+
+    # Permute both rows and columns
+    A_sorted = A[sorted_inds, sorted_inds]
+
+    return A_sorted, sorted_inds
+end
+function find_unique_indices(A::Matrix{Float64}, alpha::Vector)
+    N = size(A, 1)
+    @assert N == size(A, 2) "Matrix A must be square"
+    @assert N == length(alpha) "Length of alpha must match A"
+
+    # Dictionary: key = signature → indices with same key
+    groups = Dict{UInt64, Vector{Int}}()
+
+    for i in 1:N
+        # Create a hash key combining alpha, row, and column pattern
+        key = hash((alpha[i], A[i, :], A[:, i]))
+        push!(get!(groups, key, Int[]), i)
+    end
+
+    # For each redundant group, keep only the first index
+    unique_indices = [first(v) for v in values(groups)]
+
+    return sort(unique_indices)
+end
+
+
+alphas = [t.params.alpha for t in metacomm.taxa_list]
+
+# Print groups of species
+find_redundant(metacomm, metacomm.A, alphas)
+
+# make unique groups
+unique_inds = find_unique_indices(metacomm.A, alphas)
+N = length(unique_inds)
+# println("Keep indices: ", unique_inds)
+unique_WoRMS = [metacomm.taxa_list[i].WoRMS for i in unique_inds]
+unique_producer = [metacomm.taxa_list[i].producer for i in unique_inds]
+unique_comm = makecommunity("uniquecomm", unique_WoRMS, metacomm.A, metacomm.taxa_list) # by alpha sorted community without redundancies
+# println([unique_comm.taxa_list[i].WoRMS for i in 1:N])
+
+group_names = String.(getfield.(metacomm.taxa_list[unique_inds], :name) )
+group_names[8] = "Spinocalanidae, AetideidaeI"
+group_names[9] = "AetideidaeII"
+group_names[13] = "Scolecitrichidae, Tharybidae"
+group_names[18] = "Augaptilidae"
+group_names[22] = "Oithonidae"
+group_names[40] = "Hydrozoa"
+# println(length(group_names))
+
+group_list = [Taxa(name=group_names[n], WoRMS=unique_WoRMS[n], producer=unique_producer[n]) for n in 1:N]
+group_alphas = [unique_comm.taxa_list[i].params.alpha for i in 1:N]
+# println(group_alphas)
+[t.params.alpha = a for (t,a) in zip(group_list, (group_alphas .*365))] # set the parameter alpha for each taxa
+group_comm = Community(name = "ArcticGroup", N =unique_comm.N, A = unique_comm.A, taxa_list = group_list)
+# println([group_comm.taxa_list[i].WoRMS for i in 1:N])
+# # unique_inds = find_unique_indices(metacomm.A, alphas)
+# # println("Keep indices: ", unique_inds)
+
+# # sort matrix from small to big (high to low turnoverrate)
+A, sorted_inds = sort_matrix_by_alpha(group_comm.A, group_alphas)
+# # println(sorted_inds)
+sort_group_comm = Community(name = "SortedGroupCommunity", N= group_comm.N, A=A, taxa_list=group_comm.taxa_list[sorted_inds])
+# #attach turnover (alpha) value
+# alphas = alphas[sorted_inds]
+
+# WoRMS 3 - Detritus
+ex_taxa_id = 3
+ex_ind = findfirst(t -> t.WoRMS == 3, sort_group_comm.taxa_list) #find index of extincting taxon
+noDetri_comm = ex_community(ex_taxa_id, sort_group_comm)
+
+# # make unique groups
+# unique_inds = find_unique_indices(sortmetacomm.A, alphas)
+# # println("Keep indices: ", unique_inds)
+# unique_WoRMS = [sortmetacomm.taxa_list[i].WoRMS for i in unique_inds]
+# unique_comm = makecommunity("uniquecomm", unique_WoRMS, sortmetacomm.A, sortmetacomm.taxa_list) # by alpha sorted community without redundancies
+
+comm = noDetri_comm
+N = comm.N
+println("$(comm.name) is set up - lets go!")
+# println([group_comm.taxa_list[i].producer for i in 1:N])
+
+# plank_WoRMS = [comm.taxa_list[i].WoRMS for i in 1:N-7] #excludes mammals, fish, birds
+# plankcomm = makecommunity("PlankArctis", plank_WoRMS, comm.A[1:N-7,1:N-7], comm.taxa_list[1:N-7])
+# # println(comm.A[N-10:N, N-10:N])
+# # println([t.producer for t in comm.taxa_list])
 
 
 """
@@ -29,8 +144,8 @@ y=1, n=0
 
 "B. Erase taxa and detect changes in stability and important taxa
     Includes analysis of original community"
-Extinction = 1
-ex_taxa_id = 103259 # index of taxa
+Extinction = 0
+ex_taxa_id = 4 #104895 # index of taxa
 
 "C. Include taxa and detect changes in stability and important taxa
     Includes analysis of original community."
@@ -38,47 +153,99 @@ Invasion = 0
 inv_taxon_id = 1337 # index of taxa
 
 # amount of trials for random variables
-trials = 100
+trials = 1000000
 
 "Set the communy for the analyis"
-comm = communities[3] 
+# comm = communities[1] 
 
+# println(comm.A)
 
-"""
-BELOW: TEST SETTING
-"""
-# prey, pred small, pred big
- A = [0.0 0.0 0.0 0.0;
-     1.0 0.0 0.0 0.0;
-     1.0 1.0 0.0 0.0;
-     1.0 1.0 1.0 0.0]
+# """
+# BELOW: TEST SETTING
+# """
+# # prey, pred small, pred big
+#  A = [0.0 0.0 0.0 0.0;
+#      1.0 0.0 0.0 0.0;
+#      0.0 0.0 0.0 0.0;
+#      1.0 1.0 1.0 0.0]
 
-# amount of taxa
-N = size(A, 1)
-print("Amount of species = $N.\n")
+# # amount of taxa
+# N = size(A, 1)
+# # print("Amount of species = $N.\n")
 
-taxa_list = [Taxa(name="prey", WoRMS=1, producer=1.0), 
-            Taxa(name="small predator",  WoRMS=2, producer=0.0), 
-            Taxa(name="big predator I",  WoRMS=3, producer=0.0),
-            Taxa(name="big predator II",  WoRMS=4, producer=0.0)]
-metacomm = Community(name = "test", N= N, A=A, taxa_list=taxa_list)
-comm = Community(name = "test", N= N, A=A, taxa_list=taxa_list)
-alpha =  ([1.0, 7.0, 40.0, 40.0])
-[t.params.alpha = a for (t,a) in zip(taxa_list, alpha)] # set the parameter alpha for each taxa
-# producer = getfield.(comm.taxa_list, :producer)
-ex_taxa_id = 1 # index of taxa
-inv_taxon_id = 3
-if Invasion == 1
-    #make new community without inv_taxon_id
-    comm = ex_community(inv_taxon_id, comm)
-end
-K = [0.0, -0.5, -0.5, 0.0]
-"""
-END: TEST SETTING
-"""
-
+# taxa_list = [Taxa(name="prey", WoRMS=1, producer=1.0), 
+#             Taxa(name="small predator",  WoRMS=2, producer=0.5),
+#             #  Taxa(name="small predator red",  WoRMS=22, producer=0.0), 
+#             Taxa(name="big predator I",  WoRMS=3, producer=0.0),
+#             Taxa(name="big predator II",  WoRMS=4, producer=0.0)]
+# metacomm = Community(name = "test", N= N, A=A, taxa_list=taxa_list)
+# comm = Community(name = "test", N= N, A=A, taxa_list=taxa_list)
+# alpha =  ([0.1, 0.3, 0.3, 0.0005])
+# [t.params.alpha = a for (t,a) in zip(taxa_list, alpha)] # set the parameter alpha for each taxa
+# # producer = getfield.(comm.taxa_list, :producer)
+# ex_taxa_id = 4 # index of taxa
+# inv_taxon_id = 3
+# if Invasion == 1
+#     #make new community without inv_taxon_id
+#     comm = ex_community(inv_taxon_id, comm)
+# end
+# K = [0.0, -0.5, -0.5, 0.0]
+# """
+# END: TEST SETTING
+# """
+# println(signed_geomean([-5.0, 0.1, 1.0]))
+# exit()
 
 "for the original community the analysis function communityAnaPert"
+res = communityAna(comm, trials, 1)
+println("$(res.sum_stab) out of $trials were stable.")
+# println("Resilience $(res.resilience[1])")
+# println("My Measure $(res.mymeasure[1])")
+# println("Vulnerability $(res.vulnerability[:,1])")
+# println("Reactivity $(res.reactivity[:,1])")
+# println("Return Time $(res.returntime[:,1])")
+# println("Resistance $(res.resistance[:,1])")
+# println("$(res.sum_stab) out of $trials equilibria were stable.")
+# println("Mean resilience: $(signed_geomean(res.resilience))")
+# # take the geometric mean
+resilience = [signed_geomean(row) for row in eachrow(res.resilience)]
+println("Resilience $(resilience)")
+
+resistance = [geomean(row) for row in eachrow(res.resistance)]
+resistance_nodes = [geomean(row) for row in eachrow(res.resistance_nodes)]
+
+returntime = [geomean(row) for row in eachrow(res.returntime)]
+returntime_nodes = [geomean(row) for row in eachrow(res.returntime_nodes)]
+
+reactivity = [signed_geomean(row) for row in eachrow(res.reactivity)]
+println(reactivity)
+reactive_nodes = [signed_geomean(row) for row in eachrow(res.reactive_nodes)]
+println(reactive_nodes)
+
+vulnerability = [signed_geomean(row) for row in eachrow(res.vulnerability)]
+vulnerability_node = [signed_geomean(row) for row in eachrow(res.vulnerability_node)]
+# println(vulnerability_node)
+
+# # # Plot the results
+# make_barplot(resistance_nodes, getfield.(comm.taxa_list, :name), "resistance", "resistancebar2.tex", resistance)
+# make_barplot(returntime_nodes, getfield.(comm.taxa_list, :name), "return time", "returntimebar2.tex", returntime)
+make_barplot(reactive_nodes, getfield.(comm.taxa_list, :name), "reactivity", "reactivitybar2.tex", reactivity)
+make_barplot(vulnerability_node, getfield.(comm.taxa_list, :name), "absolute impact", "impactbar2.tex", vulnerability)
+# plot_measure_nodes(resistance_nodes, getfield.(comm.taxa_list, :name), resistance, "Resistance Measure", "testresistance_group.tex")
+# plot_measure_nodes(returntime_nodes, getfield.(comm.taxa_list, :name), returntime, "$(res.sum_stab) Return Time Measure", "testreturntime_group.png")
+# plot_measure_nodes(reactive_nodes, getfield.(comm.taxa_list, :name), reactivity, "reactivity", "testreactivity_group.png")
+# plot_measure_nodes(vulnerability_node, getfield.(comm.taxa_list, :name), vulnerability, "$(res.sum_stab) Fragile Equ. Measure", "testfragequil_group.png")
+
+# Sens = [geomean(row) for row in eachrow(res.Sens)]
+# Infl = [geomean(row) for row in eachrow(res.Infl)]
+# make_barplot(Sens, getfield.(comm.taxa_list, :name), "sensitivity", "sensitivitybar2.tex")
+# make_barplot(Infl, getfield.(comm.taxa_list, :name), "influence", "influencebar2.tex")
+
+# normalize_SensInf!(N, Sens)
+# normalize_SensInf!(N, Infl)
+# plot_norm_SensInf(getfield.(comm.taxa_list, :name), Sens, Infl, "textest.tex")
+
+
 
 if SensandInfAna == 1 || Perturbation == 1
     sum_stab, Sens, Infl, Impact = communityAnaPert(comm, trials, SensandInfAna, Perturbation, K)
@@ -86,22 +253,29 @@ end
 
 
 if Extinction == 1
+    println("taxa id $ex_taxa_id")
     ex_ind = findfirst(t -> t.WoRMS == ex_taxa_id, comm.taxa_list) #find index of extincting taxon
-    print("Index of extincting taxon is $ex_ind\n")
+    
     # perturbation vector - how is the effect of extinction captured
     # ex_K = comm.A[ex_ind,:] .* (1/sum(comm.A[ex_ind,:])) #if taxon does not eat n, intex is 0. If it ate n we expect positive effect on growth rate of n. Anteilig wie viele prey er hatte (geht besser)
     ex_K = zeros(comm.N)
     ex_K[ex_ind] = -0.5
     sum_stab, Sens, Infl, ex_Impact = communityAnaPert(comm, trials, 1, 1, ex_K)
+    println("$sum_stab of the conducted $trials trials are stable for the original community")
     # print("Sens for orig comm: $(mean(Sens, dims=2))\n")
     # make community, where ex_taxa_id is excluded
     ex_comm = ex_community(ex_taxa_id, comm)
 
     #last variable 1 if Sens and Inf ana shall be conducted. Else 0
     #save stability ratio, Sens and Infl matrices
-    ex_sum_stab, ex_Sens, ex_Infl = communityAna(ex_comm, trials, 1)
-    
-    print("\n$(ex_sum_stab/trials*100) % of the conducted $trials trials are stable, if taxon $ex_taxa_id extincts.\n")
+    ex_res = communityAna(ex_comm, trials, 1)
+    ex_sum_stab, ex_Sens, ex_Infl = ex_res.sum_stab, ex_res.Sens, ex_res.Infl
+    println("Index of extincting taxon is $ex_ind")
+    println("$ex_sum_stab of the conducted $trials trials are stable, if taxon $ex_taxa_id extincts.\n")
+    returntime = [geomean(row) for row in eachrow(ex_res.returntime)]
+    returntime_nodes = [geomean(row) for row in eachrow(ex_res.returntime_nodes)]
+    println(getfield.(ex_comm.taxa_list, :name))
+    plot_measure_nodes(returntime_nodes, getfield.(ex_comm.taxa_list, :name), returntime, "Return Time Measure", "testreturntime_ex.png")
 
     # Plot: geometric mean sens and infl per taxa -------
     # print("Sens for orig comm: $(mean(Sens, dims=2))\n")
@@ -122,8 +296,8 @@ if Extinction == 1
     normalize_SensInf!(ex_comm.N,ex_inflmean)
     insert!(ex_inflmean, ex_ind, 0)
 
-    print(abs.(sensmean - ex_sensmean))
-    print(abs.(inflmean - ex_inflmean))
+    println(abs.(sensmean - ex_sensmean))
+    println(abs.(inflmean - ex_inflmean))
 
     "VISUALIZATION -------------------------------------------------------------------"
     taxa_names = [comm.taxa_list[n].name for n in 1:comm.N]
@@ -320,10 +494,12 @@ if SensandInfAna == 1
         [sensmean inflmean],
         label = ["Sensitivity" "Influence"],
         xticks=(1:length(taxa_names), taxa_names),  # taxa names on y-axis
+        xrotation=45,
+        size=(1200, 600),
         # ylabel = "Taxa",
         ylabel = "geometric mean",
         title = "Sensitivity and Influence per Taxon",
-        bar_width = 0.27,
+        bar_width = 0.35,
         grouped = true,
         # xmirror=true,   # mirror x-axis to the top
         # orientation = :horizontal   # make bars horizontal

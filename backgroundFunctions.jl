@@ -32,7 +32,8 @@ function structural_parameters(N::Int64, A::Matrix{Float64}, BM::Vector{Float64}
       
     #Julie: rate of biomass flow in a steady state - Vector; Why this exponent?; could devide by alpha[1] then other entries are the ration of live expectancies 
     # is expected to increase in warmer water
-    α = (BM .^ -0.25)
+    # α = (BM .^ -0.25)
+    α = BM
 
     #growth from production; one if species is primary producer
     ρ̃ = producer #1 .- ρ
@@ -65,11 +66,11 @@ end
 # M = amount of trials
 function random_parameters(N::Int64, M::Int64)
     #exponent
-    γ = rand(Uniform(0.5, 1.5), N, M) #[0.8, 1.5]  nonlinearity of the predation rate on n with respect to prey density; prey abundant then gamma = 0 why not up to 2?
+    γ = rand(Uniform(1.96, 2.0), N, M) #[0.8, 1.5]  nonlinearity of the predation rate on n with respect to prey density; prey abundant then gamma = 0 why not up to 2?
     λ = ones(N,N) # 1 lambda[m,n] nonlinearity of the contribution of population m to the diet of population n - 1 if predator does not distuinguish between prey - 2 if predator is adapted to prey - 0 if n does not eat m
-    μ = rand(Uniform(1.0, 2.0), N, M) #[1.0, 2.0] exponent of mortality (linear 1.0, quadratic 2.0) 
-    ϕ = rand(Uniform(0.0, 1.0), N, M) #[0.0, 1.0] nutrient availablility - 0 if limited nutrients - 1 if abundant nutrients and no other limiting factors - phi is in the range between 0 and 1
-    ψ = rand(Uniform(0.5,1.5), N, M) #[0.5, 1.2] why not [0,1] psi=1 if desity of species n has no effect on predation rate of n itself (linear) - Holling Type
+    μ = rand(Uniform(1.96, 2.0), N, M) #[1.0, 2.0] exponent of mortality (linear 1.0, quadratic 2.0) 
+    ϕ = rand(Uniform(0.0, 0.5), N, M) #[0.0, 1.0] nutrient availablility - 0 if limited nutrients - 1 if abundant nutrients and no other limiting factors - phi is in the range between 0 and 1
+    ψ = rand(Uniform(0.9,1.1), N, M) #[0.5, 1.2] why not [0,1] psi=1 if desity of species n has no effect on predation rate of n itself (linear) - Holling Type
 
     return [ExponentialParameters(γ[:,i], λ, μ[:,i], ϕ[:,i], ψ[:,i]) for i = 1:M]
 end
@@ -377,7 +378,7 @@ function eigenvalues_are_distinct(N::Int64, EVals::Vector{ComplexF64})
 end
 
 #Calculates Sensitivity and Influence of each taxa
-function  calculateSensandInf(N::Int64, J::Matrix{Float64}, EVals::Vector{ComplexF64}, EVecs::Matrix{ComplexF64},p1::Vector{Int64})
+function  calculateSensandInf(N::Int64, J::Matrix{Float64}, EVals::Vector{ComplexF64}, EVecs::Matrix{ComplexF64}, EVecsT::Matrix{ComplexF64}) #, p1::Vector{Int64})
     @assert eigenvalues_are_distinct(N, ComplexF64.(EVals)) == true "trial $i: Sens and Inf Ana not possible. J is not diagonalizable."
 
     # ET = eigen(J')   # transpose, to find left EVal and EVec
@@ -392,16 +393,16 @@ function  calculateSensandInf(N::Int64, J::Matrix{Float64}, EVals::Vector{Comple
     # end
 
     #get left eigenvectors as rows (not normalized)
-    EVecsT = inv(EVecs)
+    # EVecsT = inv(EVecs)
     
     
     Sens = zeros(N)
     Infl = zeros(N)
     
     for n = 1:N
-        Sens[n] = log(sum( abs(EVecs[n,k]) * abs((1/EVals[k]))   for k = 1:N))
+        Sens[n] = (sum( abs(EVecs[n,k]) * abs((1/EVals[k]))   for k = 1:N))
 
-        Infl[n] = log(sum( abs(EVecsT[k,n]) * abs((1/EVals[k])) / norm(EVecsT[k, :])   for k = 1:N))
+        Infl[n] = (sum( abs(EVecsT[k,n]) * abs((1/EVals[k])) / norm(EVecsT[k, :])   for k = 1:N))
 
         # Infl[n] = log(sum( abs(EVecs[n,k]) * abs(real(EVals[k]))   for k = 1:N)) #recovery rate
         # Sens[n] = log(sum( abs(EVecs[n,k]) * abs((1/EVals[k]))   for k = 1:N))
@@ -415,12 +416,42 @@ function  calculateSensandInf(N::Int64, J::Matrix{Float64}, EVals::Vector{Comple
     return Sens, Infl
 end
 
-
+function obs_Gram(EVals, EVecs, EVecsT)
+    N = length(EVals)
+    obs_Gram = zeros(N,N)
+    # print(size(EVecsT[1,:] * conj.(EVecsT[1,:]')))
+    # print(size(EVecsT[1,:] * conj.(EVecsT[1,:]') *( dot(conj.(EVecs[:,1]), EVecs[:,3]) ) ))
+    for n in 1:N
+        for m in 1:N
+            obs_Gram += EVecsT[m,:] * (EVecsT[n,:]') * (dot((EVecs[:,m]), EVecs[:,n])) * (1/(EVals[n] + conj(EVals[m])))
+        end
+    end
+    # Check that obs_Gram and -real.(obs_Gram) are almost equal
+    if !isapprox(obs_Gram, real.(obs_Gram); atol=1e-6, rtol=0)
+        error("Assertion failed: obs_Gram is not approximately equal to real.(obs_Gram)")
+    end
+    return -real.(obs_Gram)
+end
+function contr_Gram(EVals, EVecs, EVecsT)
+    N = length(EVals)
+    contr_Gram = zeros(N,N)
+    for n in 1:N
+        for m in 1:N
+            contr_Gram += EVecs[:,m] * (EVecs[:,n]') * (dot((EVecsT[m,:]), EVecsT[n,:])) * ( 1/( EVals[n] + conj(EVals[m]) ) )
+        end
+    end
+    # Check that obs_Gram and -real.(obs_Gram) are almost equal
+    if !isapprox(contr_Gram, real.(contr_Gram); atol=1e-6, rtol=0)
+        error("Assertion failed: obs_Gram is not approximately equal to real.(obs_Gram)")
+    end
+    return -real.(contr_Gram)
+end
 
 # returns the amout of stable webs, the condition number of each of these stable webs
 # if wanted as well the Sensitivity and Influence of each taxa and stable web
 function communityAna(comm::Community, trials::Int64, SensandInfAna::Int64)
     N = comm.N
+    print("\nAmount of species = $N.\n")
     A = comm.A
     # print(A)
     producer = getfield.(comm.taxa_list, :producer)
@@ -439,10 +470,19 @@ function communityAna(comm::Community, trials::Int64, SensandInfAna::Int64)
     stability = zeros(trials)
     Sens = zeros(N, trials)
     Infl = zeros(N, trials)
-    condNrs = zeros(trials)
+    mymeasure = zeros(trials)
     leading = zeros(trials)
-    vulnerability = zeros(trials)
-    reactivity = zeros(trials)
+    vulnerability = zeros(3, trials)
+    vulnerability_node = zeros(N, trials)
+
+    reactivity = zeros(3, trials)
+    reactive_nodes = zeros(N, trials)
+
+    returntime = zeros(3, trials)
+    returntime_nodes = zeros(N, trials)
+
+    resistance = zeros(3, trials)
+    resistance_nodes = zeros(N, trials)
 
     for i = 1:trials
         #compute Jacobean for every set of parameters
@@ -460,32 +500,69 @@ function communityAna(comm::Community, trials::Int64, SensandInfAna::Int64)
         "test`````````````````````````````````"
 
         # Sort both spectra consistently (by real part, then imaginary part)
-        p1 = sortperm(EVals,  by = x -> (real(x), imag(x)))
-        EVals,  EVecs  = EVals[p1],  EVecs[:, p1]
-
+        # p1 = sortperm(EVals,  by = x -> (real(x), imag(x)))
+        # EVals_sort  = EVals[p1]
+        # EVals,  EVecs  = EVals[p1],  EVecs[:, p1]
+        #not normalized left eigenvectors
+        
         #the smaller the more stable is the web. if greater of equal to 0 not stable
         # represents recovery time, when abundancies are shifted away from equilibrium
-        leading[i] = real(EVals[end])
+        leading[i] = maximum(real(EVals))#real(EVals_sort[end])
         # check asymptotically stable
-        if real(EVals[end]) < -10e-6 # not 0 to avoid numerical error
+        if leading[i] < -10e-10 # not 0 to avoid numerical error
             # count stable conditions
             stability[i] = 1# λ < 0 ? 1 : 0
 
+            EVecsT = inv(EVecs)
+            #return time
+            obsGram = obs_Gram(EVals, EVecs, EVecsT)
+            S_eigen = eigvals(obsGram)
+            returntime[1, i] = minimum(S_eigen)
+            returntime[2, i] = sum(S_eigen) / comm.N
+            returntime[3, i] = maximum(S_eigen)
+            returntime_nodes[:, i] = diag(obsGram)
+
+            #resistance
+            contrGram = contr_Gram(EVals, EVecs, EVecsT)
+            invcG = inv(contrGram)
+            S_eigen = eigvals(invcG)
+            resistance[1, i] = minimum(S_eigen)
+            resistance[2, i] = sum(S_eigen) / comm.N
+            resistance[3, i] = maximum(S_eigen)
+            resistance_nodes[:, i] = diag(invcG)
+
             # Compute value for sensitivity and influence for every taxa and trial
             if SensandInfAna == 1
-                Sens[:,i], Infl[:,i] = calculateSensandInf(N, J, ComplexF64.(EVals), ComplexF64.(EVecs), p1)    
+                Sens[:,i], Infl[:,i] = calculateSensandInf(N, J, ComplexF64.(EVals), ComplexF64.(EVecs), ComplexF64.(EVecsT))    
             end
 
             #get condition number of J 
-            U, D, V = svd(J)
-            condNrs[i] = D[1]/D[comm.N]
+            
+            mymeasure[i] = - leading[i]/ cond(EVecs)
 
             # norm of -J^-1 denotes measure of maximal impact when perturbated with a normalized vector K
-            vulnerability[i] = 1/D[comm.N] 
+            D = svdvals(J)
+            vulnerability[1,i] = 1/(D[1]^2) 
+            vulnerability[2,i] =  (1 / comm.N) * sum(1 ./ (D .^2))
+            vulnerability[3,i] = 1/(D[comm.N]^2) 
+
+            J_inv = inv(J)
+            # println(J_inv)
+            for n in 1:comm.N
+                vulnerability_node[n,i] = norm(J_inv[:,n])^2 #shall take column
+            end
+            # println(vulnerability_node[:,i])
 
             # max initial change of the distance to equilibria when abundancies are shifted by a vector of norm 1
             S = (J + J') / 2       # symmetric part
-            reactivity[i] = maximum(eigvals(S))
+            S_eigen = eigvals(S)
+            reactivity[1, i] = minimum(S_eigen)
+            reactivity[2, i] = sum(S_eigen) / comm.N
+            reactivity[3, i] = maximum(S_eigen)
+            reactive_nodes[:, i] = real.(diag(J))
+            println(reactivity[:, i])
+            println(real.(diag(J)))
+
             # if condNrs[i] <= 20
             #     maxdirec = V[:,1]
             #     idx = sortperm(abs.(maxdirec), rev=true)
@@ -507,13 +584,27 @@ function communityAna(comm::Community, trials::Int64, SensandInfAna::Int64)
         Sens = Sens[:, stability .== 1]
         Infl = Infl[:, stability .== 1]
     end
-    condNrs = log.(condNrs[ stability .== 1])
-    vulnerability = log.(vulnerability[ stability .== 1])
-    reactivity = reactivity[ stability .== 1]
+    mymeasure = mymeasure[ stability .== 1]
     leading = leading[ stability .== 1]
+    
+    vulnerability = vulnerability[:, stability .== 1]
+    vulnerability_node = vulnerability_node[:, stability .== 1]
 
-    return (sum_stab = sum(stability), condNrs = condNrs, leading = leading,
-            vulnerability= vulnerability, reactivity = reactivity,
+    reactivity = reactivity[:, stability .== 1]
+    reactive_nodes = reactive_nodes[:, stability .== 1]
+
+    returntime = returntime[:, stability .== 1]
+    returntime_nodes = returntime_nodes[:, stability .== 1]
+
+    resistance = resistance[:, stability .== 1]
+    resistance_nodes = resistance_nodes[:, stability .== 1]
+    # leading = leading[ stability .== 1]
+
+    return (sum_stab = sum(stability), mymeasure = mymeasure, resilience = -leading,
+            returntime = returntime, returntime_nodes = returntime_nodes,
+            reactivity = reactivity, reactive_nodes=reactive_nodes,
+            resistance = resistance, resistance_nodes = resistance_nodes,
+            vulnerability = vulnerability, vulnerability_node = vulnerability_node, 
             Sens = Sens, Infl = Infl)
 end
 
@@ -541,7 +632,6 @@ function communityAnaPert(comm::Community, trials::Int64, SensandInfAna::Int64, 
     Sens = zeros(N, trials)
     Infl = zeros(N, trials)
     Impact = zeros(N, trials)
-    condNr = zeros(trials)
 
     for i = 1:trials
         #compute Jacobean for every set of parameters
@@ -553,8 +643,8 @@ function communityAnaPert(comm::Community, trials::Int64, SensandInfAna::Int64, 
 
 
         # Sort both spectra consistently (by real part, then imaginary part)
-        p1 = sortperm(EVals,  by = x -> (real(x), imag(x)))
-        EVals,  EVecs  = EVals[p1],  EVecs[:, p1]
+        # p1 = sortperm(EVals,  by = x -> (real(x), imag(x)))
+        # EVals,  EVecs  = EVals[p1],  EVecs[:, p1]
 
         # check asymptotically stable
         if real(EVals[end]) < -10e-6 # not 0 to avoid numerical error
@@ -563,7 +653,8 @@ function communityAnaPert(comm::Community, trials::Int64, SensandInfAna::Int64, 
 
             # Compute value for sensitivity and influence for every taxa and trial
             if SensandInfAna == 1
-                Sens[:,i], Infl[:,i] = calculateSensandInf(N, J, ComplexF64.(EVals), ComplexF64.(EVecs), p1)
+                EVecsT = inv(EVecs)
+                Sens[:,i], Infl[:,i] = calculateSensandInf(N, J, ComplexF64.(EVals), ComplexF64.(EVecs), ComplexF64.(EVecsT))
                 # print(J*inv(J))
                           # inverse
 
@@ -586,8 +677,6 @@ function communityAnaPert(comm::Community, trials::Int64, SensandInfAna::Int64, 
                     Impact[:, i] = -J \ K # solves -Jx=K for x
             end
 
-            #get condition number of j
-            condNr[i] = cond(J)
             
         end
     end
@@ -600,46 +689,136 @@ function communityAnaPert(comm::Community, trials::Int64, SensandInfAna::Int64, 
     if Perturbation == 1
          Impact = Impact[:, stability .== 1]
     end
-    condNr = condNr[ stability .== 1]
 
-    return sum(stability), Sens, Infl, Impact, condNr
+    return sum(stability), Sens, Infl, Impact
 end
 
 """
 MAKING THE RESULTS OF THE ANALYSIS OF THE COMMUNITIES COMPARABLE
 """
 
-# Makes the geomean for the a vector that can as well exhibit negative values ( such as Impact) 
+# # Makes the geomean for the a vector that can as well exhibit negative values ( such as Impact) 
+# function signed_geomean(x)
+#     if isempty(x)
+#         return NaN
+#     end
+
+#     # 1. Identify positive and negative indices
+#     pos_idx = findall(>(0), x)
+#     neg_idx = findall(<(0), x)
+
+#     # 2. Take logs
+#     log_x = similar(x, Float64)
+#     log_x[pos_idx] .= log.(x[pos_idx])
+#     log_x[neg_idx] .= log.(abs.(x[neg_idx]))
+
+#     # #take mean separately
+#     # mean_neg = mean(log_x[neg_idx])
+#     # mean_pos = mean(log_x[pos_idx])
+
+#     # 3. Restore signs for negative entries
+#     log_x[neg_idx] .= log_x[neg_idx] .* -1
+
+#     # 4. Mean over all entries
+#     mean_log = mean(log_x)
+
+#     # 5. Exponentiate - dont to that want to keep negative impacts negative.
+#     # return mean_log
+#     if mean_log>=0
+#         return exp.(mean_log)
+#     else
+#         return -1*exp.(-1*mean_log)
+#     end
+# end
+
+"""
+    _calculate_mixed_sign_geomean(x)
+
+Calculates the geometric mean by taking the signed average of the log values.
+This is used when the input vector 'x' contains a mix of positive and negative values.
+"""
+function _calculate_mixed_sign_geomean(x)
+    # This logic assumes the array is not empty and has mixed signs/zeroes.
+
+    # 1. Identify indices for positive and negative numbers
+    pos_idx = findall(>(0), x)
+    neg_idx = findall(<(0), x)
+
+    # 2. Take logs (standard for positive, absolute for negative)
+    log_x = similar(x, Float64)
+    log_x[pos_idx] .= log.(x[pos_idx])
+    log_x[neg_idx] .= log.(abs.(x[neg_idx]))
+
+    # 3. Restore signs for negative entries (making log_x[neg_idx] negative)
+    # log_x[neg_idx] .= log_x[neg_idx] .* -1
+
+    # 4. Mean over all entries
+    mean_log_pos = exp.(mean(log_x[pos_idx]))
+    mean_log_neg = exp.(mean(log_x[neg_idx]))
+    return (mean_log_pos - mean_log_neg)/2
+    # 5. Exponentiate, preserving the overall sign
+    # if mean_log_pos >= mean_log_neg
+    #     return exp((mean_log_pos - mean_log_neg)/2)
+    # else
+    #     return -1 * exp((mean_log_neg -mean_log_pos)/2)
+    # end
+end
+
+
+# --- Main Conditional Function ---
+
+"""
+    signed_geomean(x)
+
+Calculates the geometric mean of a vector 'x' based on its content:
+1. All Positive: Returns geomean(x).
+2. All Negative: Returns -geomean(-x).
+3. Mixed Signs (or includes zero): Returns the result of the complex signed-log average.
+"""
 function signed_geomean(x)
     if isempty(x)
         return NaN
     end
 
-    # 1. Identify positive and negative indices
-    pos_idx = findall(>(0), x)
-    neg_idx = findall(<(0), x)
+    all_positive = all(x .>= 0) # Check for all non-negative (includes zero)
+    all_negative = all(x .<= 0) # Check for all non-positive (includes zero)
+    
+    # Check for all non-zero elements being the same sign
+    has_pos = any(x .> 0)
+    has_neg = any(x .< 0)
 
-    # 2. Take logs
-    log_x = similar(x, Float64)
-    log_x[pos_idx] .= log.(x[pos_idx])
-    log_x[neg_idx] .= log.(abs.(x[neg_idx]))
-
-    # #take mean separately
-    # mean_neg = mean(log_x[neg_idx])
-    # mean_pos = mean(log_x[pos_idx])
-
-    # 3. Restore signs for negative entries
-    log_x[neg_idx] .= log_x[neg_idx] .* -1
-
-    # 4. Mean over all entries
-    mean_log = mean(log_x)
-
-    # 5. Exponentiate - dont to that want to keep negative impacts negative.
-    # return mean_log
-    if mean_log>=0
-        return exp.(mean_log)
-    else
-        return -1*exp.(-1*mean_log)
+    if !has_neg # Case 2: All positive (or zero)
+        # Use standard geomean. If x contains zero, geomean will correctly return 0.
+        return geomean(x)
+    elseif !has_pos # Case 1: All negative (or zero)
+        # Calculate geomean of absolute values, then negate the result.
+        # This is safe because all(x .<= 0) means all elements of -x are >= 0.
+        return -geomean(-x)
+    else # Case 3: Mixed signs
+        #closer to 0
+        return mean(x)
+        # if abs(minimum(x)) < maximum(x)
+        #     prinln("here")
+        #     shift = minimum(x) - 0.0000001
+        #     new = x .- shift
+        #     mean_shift = geomean(new)
+        #     return mean_shift .+ shift
+        # else 
+        #     shift = maximum(x) + 0.0000001
+        #     new = x .- shift
+        #     println(new)
+        #     mean_shift = -geomean(-new)
+        #     println(mean_shift)
+        #     return mean_shift .+ shift
+        # end
+        # println(shift)
+        # new = x .- shift
+        # println(new)
+        # mean_shift = geomean(new)
+        # println(mean_shift)
+        # return mean_shift .+ shift
+        # Use the complex, signed-log averaging logic for mixed sets
+        # return _calculate_mixed_sign_geomean(x)
     end
 end
 
@@ -648,37 +827,24 @@ end
 # to eliminate this effect, we plot the normalized difference of the Sens/Infl of a spacies to the (normalized) mean (that is (1/ amount of species in the community))
 # this value is comparable to other webs as we directly see if the relation to the mean (in that community) changed
 function normalize_SensInf!(N::Int64, means::Vector{Float64})
-    total = sum(means)
-    means ./= total                     # normalize to sum = 1
-    means .-= 1/N                       # shift by 1/N
-    for i in 1:N
-        if means[i] <= 0
-            means[i] *= N
-        else
-            means[i] *= N / (N-1)
-        end
-    end
+    # total = sum(means)
+    # means ./= total                     # normalize to sum = 1
+    # means .-= 1/N                       # shift by 1/N
+    # for i in 1:N
+    #     if means[i] <= 0
+    #         means[i] *= N
+    #     else
+    #         means[i] *= N / (N-1)
+    #     end
+    # end
+
+    mw = mean(means)
+    means .-= mw
+    mmax = maximum(abs.(means))
+    means ./=mmax
     return means
 end
-# takes normalized values and makes the plot
-function plot_norm_SensInf(taxa_names, sens, infl)
-    plt = groupedbar(
-        # taxa_names,
-        [sens infl],
-        label = ["sensitivity" "influence"],
-        xticks=(1:length(taxa_names), taxa_names),  # taxa names on x-axis
-        # yticks=([-1.0, 0.0, 1.0], ["not at all", "average", "the most possible"]),
-        ylabel = "normalized over-/under-average",
-        ylimits = [-1.0,1.0],
-        #  title = "Sensitivity and Influence",
-        bar_width = 0.27,
-        grouped = true
-        # xmirror=true,   # mirror x-axis to the top
-        # orientation = :horizontal   # make bars horizontal
-    )
-    hline!([0.0], color=:black, lw=2, label=false)
-    return plt
-end
+
 
 """
 COMPARING DIFFERENT COMMUNITIES
