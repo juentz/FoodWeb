@@ -1,5 +1,5 @@
 """
-This file analyzes a given matrix which is loded from jld2 file regarding 
+This file analyzes a given matrices that are loded from jld2 file regarding 
 community measurements as well as node measurements
 """
 
@@ -10,7 +10,7 @@ using StatsBase
 using Statistics, StatsPlots
 using JLD2 # for storing and loading data
 using Plots
-pgfplotsx()
+# pgfplotsx()
 # using PGFPlotsX
 using Statistics
 
@@ -18,39 +18,45 @@ include("types.jl")
 include("backgroundFunctions.jl") 
 include("templateplots.jl")
 
-@load "stableSettings_arctic.jld2" stableSettings s stab_trials trials comm
+@load "stableSettings_Arctic_all.jld2" stableSettings s stab_trials trials comm
+location = "Arctic"
 
 
 N = comm.N
-println("Compareing $N species.")
+println("Comparing $N species.")
 
-mymeasure = zeros(stab_trials)
-leading = zeros(stab_trials)
+# mymeasure = zeros(stab_trials)
+# leading = zeros(stab_trials)
 
-resilience = zeros(stab_trials)
-svmaxV = zeros(stab_trials)
-svminV = zeros(stab_trials)
+# resilience = zeros(stab_trials)
+# svmaxV = zeros(stab_trials)
+# svminV = zeros(stab_trials)
 
-returntime = zeros(3, stab_trials)
+# returntime = zeros(3, stab_trials)
 returntime_nodes = zeros(N, stab_trials)
 
-resistance = zeros(3, stab_trials)
+# resistance = zeros(3, stab_trials)
 resistance_nodes = zeros(N, stab_trials)
 
-degree = zeros(N)
-for n in 1:N
-    degree[n]=sum(comm.A[:,n])+sum(comm.A[n,:])
-end
-println(degree)
+# degree = zeros(N)
+# degree_in = zeros(N)
+# degree_out = zeros(N)
+# for n in 1:N
+#     degree_in[n]= sum(comm.A[n,:])
+#     degree_out[n]=sum(comm.A[:,n])
+#     degree[n]=sum(comm.A[:,n])+sum(comm.A[n,:])
+# end
+# # println(degree)
 
 
 Sens = zeros(N, stab_trials)
 Infl = zeros(N, stab_trials)
-vulnerability = zeros(3, stab_trials)
+norm_Infl = zeros(N, stab_trials)
+# vulnerability = zeros(3, stab_trials)
 vulnerability_node = zeros(N, stab_trials)
 
-reactivity = zeros(3, stab_trials)
-reactive_nodes = zeros(N, stab_trials)
+# reactivity = zeros(3, stab_trials)
+# reactive_nodes = zeros(N, stab_trials)
 
 
 for i in 1:stab_trials
@@ -62,85 +68,126 @@ for i in 1:stab_trials
     EVecsT = inv(EVecs)
 
     #Resilience
-    resilience[i] = maximum(real(EVals))
-    vals = svdvals(EVecs)
-    svmaxV[i] = maximum(vals)
-    svminV[i] = minimum(vals)
+    # resilience[i] = maximum(real(EVals))
+    # vals = svdvals(EVecs)
+    # svmaxV[i] = maximum(vals)
+    # svminV[i] = minimum(vals)
 
     #return time
     obsGram = obs_Gram(EVals, EVecs, EVecsT)
     S_eigen = eigvals(obsGram)
-    returntime[1, i] = minimum(S_eigen)
-    returntime[2, i] = sum(S_eigen) / comm.N
-    returntime[3, i] = maximum(S_eigen)
+    # returntime[1, i] = minimum(S_eigen)
+    # returntime[2, i] = sum(S_eigen) / comm.N
+    # returntime[3, i] = maximum(S_eigen)
     returntime_nodes[:, i] = diag(obsGram)
 
-    #resistance
-    contrGram = contr_Gram(EVals, EVecs, EVecsT)
-    invcG = inv(contrGram)
-    S_eigen = eigvals(invcG)
-    resistance[1, i] = minimum(S_eigen)
-    resistance[2, i] = sum(S_eigen) / comm.N
-    resistance[3, i] = maximum(S_eigen)
-    resistance_nodes[:, i] = diag(invcG)
+    # #resistance
+    # contrGram = contr_Gram(EVals, EVecs, EVecsT)
+    # invcG = inv(contrGram)
+    # S_eigen = eigvals(invcG)
+    # resistance[1, i] = minimum(S_eigen)
+    # resistance[2, i] = sum(S_eigen) / comm.N
+    # resistance[3, i] = maximum(S_eigen)
+    # resistance_nodes[:, i] = diag(invcG)
 
     # #Hankel singular values
     # W = eigvals(contrGram * obsGram)
     # hankelsv[:,i] = sqrt.(W)
 
     Sens[:,i], Infl[:,i] = calculateSensandInf(N, J, ComplexF64.(EVals), ComplexF64.(EVecs), ComplexF64.(EVecsT))
+    
     D = svdvals(J)
-    vulnerability[1,i] = 1/(D[1]^2) 
-    vulnerability[2,i] =  (1 / comm.N) * sum(1 ./ (D .^2))
-    vulnerability[3,i] = 1/(D[comm.N]^2) 
+    # vulnerability[1,i] = 1/(D[1]^2) 
+    # vulnerability[2,i] =  (1 / comm.N) * sum(1 ./ (D .^2))
+    # vulnerability[3,i] = 1/(D[comm.N]^2) 
     J_inv = inv(J)
     # println(J_inv)
     for n in 1:comm.N
-        vulnerability_node[n,i] = (comm.taxa_list[n].params.alpha * norm(J_inv[:,n]))^2 #shall take column
+        vulnerability_node[n,i] = (norm(J_inv[:,n]))^2 #(comm.taxa_list[n].params.alpha * norm(J_inv[:,n]))^2 #shall take column
+
+        norm_Infl[n,i] = (sum( comm.taxa_list[n].params.alpha * abs(EVecsT[k,n]) * abs((1/EVals[k])) / norm(EVecsT[k, :])   for k = 1:N))
     end
 
-    # max initial change of the distance to equilibria when abundancies are shifted by a vector of norm 1
-    S = (J + J') / 2       # symmetric part
-    S_eigen = eigvals(S)
-    reactivity[1, i] = minimum(S_eigen)
-    reactivity[2, i] = sum(S_eigen) / comm.N
-    reactivity[3, i] = maximum(S_eigen)
-    reactive_nodes[:, i] = real.(diag(J))
+    # # max initial change of the distance to equilibria when abundancies are shifted by a vector of norm 1
+    # S = (J + J') / 2       # symmetric part
+    # S_eigen = eigvals(S)
+    # reactivity[1, i] = minimum(S_eigen)
+    # reactivity[2, i] = sum(S_eigen) / comm.N
+    # reactivity[3, i] = maximum(S_eigen)
+    # reactive_nodes[:, i] = real.(diag(J))
 end
-println(resilience)
-resilience = signed_geomean(resilience)
-println("Resilience $(resilience)")
-svmaxV = signed_geomean(svmaxV)
-svminV = signed_geomean(svminV)
-println("Singular values max: $(svmaxV), min: $svminV, condition $(svmaxV/svminV)")
+# # println(resilience)
+# resilience = signed_geomean(resilience)
+# println("Resilience $(resilience)")
+# svmaxV = signed_geomean(svmaxV)
+# svminV = signed_geomean(svminV)
+# println("Singular values max: $(svmaxV), min: $svminV, condition $(svmaxV/svminV)")
 
-resistance = [geomean(row) for row in eachrow(resistance)]
-resistance_nodes = [geomean(row) for row in eachrow(resistance_nodes)]
+# resistance = [geomean(row) for row in eachrow(resistance)]
+# resistance_nodes = [geomean(row) for row in eachrow(resistance_nodes)]
 
-returntime = [geomean(row) for row in eachrow(returntime)]
+# returntime = [geomean(row) for row in eachrow(returntime)]
 returntime_nodes = [geomean(row) for row in eachrow(returntime_nodes)]
 
 # hankelsv = [geomean(row) for row in eachrow(hankelsv)]
 
 Sens = [geomean(row) for row in eachrow(Sens)]
-Infl = [geomean(row) for row in eachrow(Infl)]
-vulnerability = [signed_geomean(row) for row in eachrow(vulnerability)]
+# Infl = [geomean(row) for row in eachrow(Infl)]
+norm_Infl = [geomean(row) for row in eachrow(norm_Infl)]
+# vulnerability = [signed_geomean(row) for row in eachrow(vulnerability)]
 vulnerability_node = [signed_geomean(row) for row in eachrow(vulnerability_node)]
 
-reactivity = [signed_geomean(row) for row in eachrow(reactivity)]
-# println(reactivity)
+# reactivity = [signed_geomean(row) for row in eachrow(reactivity)]
+# # println(reactivity)
 # reactive_nodes = [signed_geomean(row) for row in eachrow(reactive_nodes)]
 # println(reactive_nodes)
 
-# # Plot the results
-make_barplot(resistance_nodes, getfield.(comm.taxa_list, :name), "resistance", "resistance_arctic.tex", resistance)
-make_barplot(returntime_nodes, getfield.(comm.taxa_list, :name), "return time", "returntime_arctic.tex", returntime)
-# make_barplot(reactive_nodes, getfield.(comm.taxa_list, :name), "initial amplification rate", "reactive_arctic.png", reactivity)
-make_barplot(Sens, getfield.(comm.taxa_list, :name), "sensitivity", "sensitivity_arctic.tex")
-make_barplot(Infl, getfield.(comm.taxa_list, :name), "influence", "influence_arctic.tex")
-make_barplot(vulnerability_node, getfield.(comm.taxa_list, :name), "absolute impact (normed pert)", "impact_arctic_norm.tex")
+# # Plot the results in tex
+# make_barplot(resistance_nodes, getfield.(comm.taxa_list, :name), "resistance", "resistance_$(location).tex", resistance)
+# make_barplot(returntime_nodes, getfield.(comm.taxa_list, :name), "mean deviation", "returntime_$(location).tex", returntime)
+# # make_barplot(reactive_nodes, getfield.(comm.taxa_list, :name), "initial amplification rate", "reactive_$(location).tex", reactivity)
+# make_barplot(Sens, getfield.(comm.taxa_list, :name), "sensitivity", "sensitivity_$(location).tex")
+# make_barplot(Infl, getfield.(comm.taxa_list, :name), "influence", "influence_$(location).tex")
+# # make_barplot(norm_Infl, getfield.(comm.taxa_list, :name), "influence (normalized)", "influence_norm_$(location).tex")
+# make_barplot(vulnerability_node, getfield.(comm.taxa_list, :name), "normed absolute impact", "impact_$(location)_norm.tex")
 
-# # make_barplot(reactive_nodes, getfield.(comm.taxa_list, :name), "reactivity", "reactivity_arctic.png", reactivity)
-# plt = scatter(1:N, degree)
-# savefig(plt,"degree_arctic.png")
-# println(getfield.(comm.taxa_list, :name))
+# plot_reactivity(reactive_nodes, getfield.(comm.taxa_list, :name), "reactivity", "reactivity_$(location).tex", reactivity, -resilience)
+
+# exit()
+"""
+Extra: Compare statis and dynamic node measures there are strong correlations existing!
+"""
+# # Combine vectors into a matrix (columns = variables)
+# results = hcat(
+#     resistance_nodes,
+#     returntime_nodes,
+#     Sens,
+#     Infl,
+#     norm_Infl,
+#     vulnerability_node,
+#     reactive_nodes,
+#     degree,
+#     degree_in,
+#     degree_out
+# )
+
+# nvars = size(results, 2)
+
+# for i in 1:nvars
+#     for j in i:nvars
+#         println(corspearman(results[:, i], results[:, j]))
+#     end
+# end
+
+
+
+# Plot the results in tex
+# make_barplot(resistance_nodes, getfield.(comm.taxa_list, :name), "resistance", "resistance_$(location).png")
+make_barplot(returntime_nodes, getfield.(comm.taxa_list, :name), "mean deviation", "returntime_$(location).png")
+# make_barplot(reactive_nodes, getfield.(comm.taxa_list, :name), "initial amplification rate", "reactive_$(location).png", reactivity)
+make_barplot(Sens, getfield.(comm.taxa_list, :name), "sensitivity", "sensitivity_$(location).png")
+# make_barplot(Infl, getfield.(comm.taxa_list, :name), "influence", "influence_$(location).png")
+make_barplot(norm_Infl, getfield.(comm.taxa_list, :name), "alpha influence", "influence_norm_$(location).png")
+make_barplot(vulnerability_node, getfield.(comm.taxa_list, :name), "absolute impact", "impact_$(location).png")
+
+# plot_reactivity(reactive_nodes, getfield.(comm.taxa_list, :name), "reactivity", "reactivity_$(location).png", reactivity, -resilience)

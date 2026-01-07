@@ -1,0 +1,120 @@
+% Recommended preamble:
+% \usetikzlibrary{arrows.meta}
+% \usetikzlibrary{backgrounds}
+% \usepgfplotslibrary{patchplots}
+% \usepgfplotslibrary{fillbetween}
+% \pgfplotsset{%
+%     layers/standard/.define layer set={%
+%         background,axis background,axis grid,axis ticks,axis lines,axis tick labels,pre main,main,axis descriptions,axis foreground%
+%     }{
+%         grid style={/pgfplots/on layer=axis grid},%
+%         tick style={/pgfplots/on layer=axis ticks},%
+%         axis line style={/pgfplots/on layer=axis lines},%
+%         label style={/pgfplots/on layer=axis descriptions},%
+%         legend style={/pgfplots/on layer=axis descriptions},%
+%         title style={/pgfplots/on layer=axis descriptions},%
+%         colorbar style={/pgfplots/on layer=axis descriptions},%
+%         ticklabel style={/pgfplots/on layer=axis tick labels},%
+%         axis background@ style={/pgfplots/on layer=axis background},%
+%         3d box foreground style={/pgfplots/on layer=axis foreground},%
+%     },
+% }
+
+\begin{tikzpicture}[/tikz/background rectangle/.style={fill={rgb,1:red,1.0;green,1.0;blue,1.0}, fill opacity={1.0}, draw opacity={1.0}}, show background rectangle]
+\begin{axis}[point meta max={nan}, point meta min={nan}, legend cell align={left}, legend columns={1}, title={}, title style={at={{(0.5,1)}}, anchor={south}, font={{\fontsize{14 pt}{18.2 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}, align={center}}, legend style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, line width={1}, solid, fill={rgb,1:red,1.0;green,1.0;blue,1.0}, fill opacity={1.0}, text opacity={1.0}, font={{\fontsize{8 pt}{10.4 pt}\selectfont}}, text={rgb,1:red,0.0;green,0.0;blue,0.0}, cells={anchor={center}}, at={(1.02, 1)}, anchor={north west}}, axis background/.style={fill={rgb,1:red,1.0;green,1.0;blue,1.0}, opacity={1.0}}, anchor={north west}, xshift={1.0mm}, yshift={-1.0mm}, width={150.4mm}, height={99.6mm}, scaled x ticks={false}, xlabel={}, x tick style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, opacity={1.0}}, x tick label style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, opacity={1.0}, rotate={45}}, xlabel style={at={(ticklabel cs:0.5)}, anchor=near ticklabel, at={{(ticklabel cs:0.5)}}, anchor={near ticklabel}, font={{\fontsize{11 pt}{14.3 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}}, xmajorgrids={true}, xmin={-0.6500000000000021}, xmax={57.650000000000006}, xticklabels={{Detritus,Bacteria,Synechococcus,Picophytoplankton,Autotrophic nanoplankton,Mixotrophic nanoplankton,Heterotrophic nanoplankton,Autotrophic microplankton,Mixotrophic microplankton,Heterotrophic microplankton,Calanus finmarchicus,Calanus glacialis,Calanus hyperboreus,Pseudocalanus minutus,Microcalanus pygmaeus,Spinocalanus spp. ,Aetideidae (detritivorous-omnivorous),Aetideidae (carnivorous-omnivorous),Euchaetidae,Scolecitrichidae,Metridia longa,Deep-sea copepods (Lucicutiidae, Heterorhabdidae, Augaptilidae),Oithonidae,Oncaea sp.,Ostracoda,Themisto abyssorum,Themisto libellula,Apherusa sp. / Onisimus sp.,Gammarus wilkitzkii,Thysanoessa spp.,Meganyctiphanes norvegica,Hymenodora glacialis,Clione limacina,Limacina spp. ,Chaetognatha,Appendicularia,Hydrozoa,Ctenophora,Boreogadus saida,Gadus morhua,Melanogrammus aeglefinus,Mallotus villosus,Reinhardtius hippoglossoides,Sebastes norvegicus,Clupea harengus,Alle alle,Uria lomvia,Cepphus grylle,Balaena mysticetus,Pusa hispida,Ursus maritimus,Mysticeti,Balaenoptera musculus,Delphinidae,Orcinus orca,Pagophilus groenlandicus}}, xtick={{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56}}, xtick align={inside}, xticklabel style={font={{\fontsize{8 pt}{10.4 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}, anchor={north east}}, x grid style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={0.1}, line width={0.5}, solid}, axis x line*={left}, x axis line style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, line width={1}, solid}, scaled y ticks={false}, ylabel={reactivity}, y tick style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, opacity={1.0}}, y tick label style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, opacity={1.0}, rotate={0}}, ylabel style={at={(ticklabel cs:0.5)}, anchor=near ticklabel, at={{(ticklabel cs:0.5)}}, anchor={near ticklabel}, font={{\fontsize{11 pt}{14.3 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}}, ymajorgrids={true}, ymin={-370.49306026280794}, ymax={321.4437211730019}, yticklabels={{min,-300.0,-200.0,-100.0,expected,0.0,-resilience,100.0,200.0,300.0,reactivity}}, ytick={{-350.9099438070775,-300.0,-200.0,-100.0,-3.4139196715501443,0.0,0.00038438304871080034,100.0,200.0,300.0,301.8606047172714}}, ytick align={inside}, yticklabel style={font={{\fontsize{8 pt}{10.4 pt}\selectfont}}, color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, rotate={0.0}}, y grid style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={0.1}, line width={0.5}, solid}, axis y line*={left}, y axis line style={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, line width={1}, solid}, colorbar={false}]
+    \addplot[color={rgb,1:red,0.502;green,0.502;blue,0.502}, name path={17}, only marks, draw opacity={1.0}, line width={0}, solid, mark={*}, mark size={3.0 pt}, mark repeat={1}, mark options={color={rgb,1:red,0.0;green,0.0;blue,0.0}, draw opacity={1.0}, fill={rgb,1:red,0.502;green,0.502;blue,0.502}, fill opacity={1.0}, line width={0.75}, rotate={0}, solid}]
+        table[row sep={\\}]
+        {
+            \\
+            1.0  -0.24589855478938824  \\
+            2.0  -49.912099504628486  \\
+            3.0  -38.21442402970419  \\
+            4.0  -50.93868229603025  \\
+            5.0  -20.133865844121967  \\
+            6.0  -11.249977367376356  \\
+            7.0  -0.4267820780271452  \\
+            8.0  -9.277569869877395  \\
+            9.0  -3.842807317053293  \\
+            10.0  -0.25808548136980436  \\
+            11.0  -0.07831485764644555  \\
+            12.0  -0.06062208836738208  \\
+            13.0  -0.05105988634050779  \\
+            14.0  -0.13591248167436293  \\
+            15.0  -0.1415845495142069  \\
+            16.0  -0.14811264636535976  \\
+            17.0  -0.061851927283341435  \\
+            18.0  -0.0562970486276325  \\
+            19.0  0.00213410134613409  \\
+            20.0  -0.05765168797193025  \\
+            21.0  0.02654871777045592  \\
+            22.0  -0.04776800974572204  \\
+            23.0  -0.0861122046723771  \\
+            24.0  -0.1865286643203755  \\
+            25.0  -0.05552961569941645  \\
+            26.0  -0.040713784055302626  \\
+            27.0  -0.029065929232563514  \\
+            28.0  -0.026155432778138716  \\
+            29.0  -0.027322268004827212  \\
+            30.0  -0.06033189500088497  \\
+            31.0  -0.03358347490320935  \\
+            32.0  -0.012632707220456264  \\
+            33.0  -0.013365897059583407  \\
+            34.0  -0.09765483984720644  \\
+            35.0  -0.02931904540856266  \\
+            36.0  -0.06817551271427298  \\
+            37.0  -0.03136121087542199  \\
+            38.0  -0.044941070526126635  \\
+            39.0  -0.04451458513103464  \\
+            40.0  -0.01751246560470512  \\
+            41.0  -0.015877922268848144  \\
+            42.0  -0.040227339063712314  \\
+            43.0  -0.009476504588642078  \\
+            44.0  -0.009494504114004156  \\
+            45.0  -0.01571837695629286  \\
+            46.0  -0.000787954735514956  \\
+            47.0  -0.0020265492457007383  \\
+            48.0  -0.00163288603360549  \\
+            49.0  -0.00019211607189701182  \\
+            50.0  -0.006321431099928969  \\
+            51.0  -0.0006064181756431268  \\
+            52.0  -0.001525753526893499  \\
+            53.0  -0.00022676495729426294  \\
+            54.0  -0.0020859688189671256  \\
+            55.0  -0.00039116963976585517  \\
+            56.0  -0.006284171017842419  \\
+        }
+        ;
+    \addplot[color={rgb,1:red,0.0;green,0.0;blue,0.0}, name path={18}, draw opacity={1.0}, line width={2}, solid]
+        table[row sep={\\}]
+        {
+            \\
+            -58.95000000000002  -350.9099438070775  \\
+            115.95000000000002  -350.9099438070775  \\
+        }
+        ;
+    \addplot[color={rgb,1:red,0.0;green,0.0;blue,0.0}, name path={19}, draw opacity={1.0}, line width={2}, dashed]
+        table[row sep={\\}]
+        {
+            \\
+            -58.95000000000002  -3.4139196715501443  \\
+            115.95000000000002  -3.4139196715501443  \\
+        }
+        ;
+    \addplot[color={rgb,1:red,0.0;green,0.0;blue,0.0}, name path={20}, draw opacity={1.0}, line width={2}, solid]
+        table[row sep={\\}]
+        {
+            \\
+            -58.95000000000002  301.8606047172714  \\
+            115.95000000000002  301.8606047172714  \\
+        }
+        ;
+    \addplot[color={rgb,1:red,0.0;green,0.0;blue,0.0}, name path={21}, draw opacity={1.0}, line width={2}, dotted]
+        table[row sep={\\}]
+        {
+            \\
+            -58.95000000000002  0.00038438304871080034  \\
+            115.95000000000002  0.00038438304871080034  \\
+        }
+        ;
+\end{axis}
+\end{tikzpicture}

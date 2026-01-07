@@ -69,7 +69,7 @@ function random_parameters(N::Int64, M::Int64)
     γ = rand(Uniform(1.96, 2.0), N, M) #[0.8, 1.5]  nonlinearity of the predation rate on n with respect to prey density; prey abundant then gamma = 0 why not up to 2?
     λ = ones(N,N) # 1 lambda[m,n] nonlinearity of the contribution of population m to the diet of population n - 1 if predator does not distuinguish between prey - 2 if predator is adapted to prey - 0 if n does not eat m
     μ = rand(Uniform(1.96, 2.0), N, M) #[1.0, 2.0] exponent of mortality (linear 1.0, quadratic 2.0) 
-    ϕ = rand(Uniform(0.0, 0.5), N, M) #[0.0, 1.0] nutrient availablility - 0 if limited nutrients - 1 if abundant nutrients and no other limiting factors - phi is in the range between 0 and 1
+    ϕ = rand(Uniform(0.0, 1.0), N, M) #[0.0, 1.0] nutrient availablility - 0 if limited nutrients - 1 if abundant nutrients and no other limiting factors - phi is in the range between 0 and 1
     ψ = rand(Uniform(0.9,1.1), N, M) #[0.5, 1.2] why not [0,1] psi=1 if desity of species n has no effect on predation rate of n itself (linear) - Holling Type
 
     return [ExponentialParameters(γ[:,i], λ, μ[:,i], ϕ[:,i], ψ[:,i]) for i = 1:M]

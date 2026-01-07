@@ -41,17 +41,16 @@ end
 # Define final community for usage
 # """
 # #---------------------------------------------------------------------------------
-@load "communities_arctic.jld2" communities
+@load "GreenlandSea_options.jld2" communities
 metacomm = communities[1]
-group_comm = communities[2]
-sort_group_comm = communities[3]
-noDetri_comm = communities[4]
-noToxic_comm = communities[5]
+noCyano = communities[2]
+noBacteria = communities[3]
+noDetri = communities[4]
 #------------------
 # Setting used
-comm = noToxic_comm
-trials = 10000000
-filename = "stableSettings_arctic.jld2"
+comm = metacomm
+trials = 5000000
+filename = "stableSettings_GreenlandSea_all.jld2"
 # -----------------
 
 # """
